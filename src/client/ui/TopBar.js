@@ -82,27 +82,49 @@ export class TopBar {
         this.dayText.setPosition(width - 16 - dayPillW / 2, 23);
     }
 
+    updatePhaseDisplay(phaseRaw) {
+        const raw = phaseRaw ? String(phaseRaw).toUpperCase() : 'DAY_PHASE';
+        let color = '#F59E0B';
+        let strokeColor = 0xF59E0B;
+        let displayPhase = 'DAY PHASE';
+
+        if (raw.includes('NIGHT')) {
+            color = '#A855F7';
+            strokeColor = 0xA855F7;
+            displayPhase = 'NIGHT PHASE';
+        } else if (raw.includes('JUDGEMENT') || raw.includes('JUDGMENT')) {
+            color = '#EF4444';
+            strokeColor = 0xEF4444;
+            displayPhase = 'JUDGEMENT PHASE';
+        } else if (raw.includes('INITIATION') || raw.includes('ROLE_ASSIGNMENT') || raw.includes('ROLE')) {
+            color = '#38BDF8';
+            strokeColor = 0x38BDF8;
+            displayPhase = 'INITIATION PHASE';
+        } else if (raw.includes('DAY')) {
+            color = '#F59E0B';
+            strokeColor = 0xF59E0B;
+            displayPhase = 'DAY PHASE';
+        }
+
+        this.phaseText.setText(displayPhase);
+        this.phaseText.setColor(color);
+        this.phasePillBg.setStrokeStyle(1.5, strokeColor, 0.9);
+        this.glowLine.setFillStyle(strokeColor, 0.9);
+    }
+
     setupEventListeners() {
+        // Query initial phase state from GameScene if available
+        if (this.scene.gameScene && this.scene.gameScene.phaseManager) {
+            const pm = this.scene.gameScene.phaseManager;
+            this.updatePhaseDisplay(pm.currentPhase);
+        }
+
         gameEvents.on('phase:changed', (data) => {
-            const phaseRaw = data.to ? String(data.to).toUpperCase() : 'DAY_PHASE';
-            let color = '#F59E0B';
-            let strokeColor = 0xF59E0B;
+            this.updatePhaseDisplay(data.to);
+        });
 
-            if (phaseRaw.includes('NIGHT')) {
-                color = '#A855F7';
-                strokeColor = 0xA855F7;
-            } else if (phaseRaw.includes('JUDGEMENT') || phaseRaw.includes('JUDGMENT')) {
-                color = '#EF4444';
-                strokeColor = 0xEF4444;
-            } else if (phaseRaw.includes('INITIATION')) {
-                color = '#22C55E';
-                strokeColor = 0x22C55E;
-            }
-
-            this.phaseText.setText(phaseRaw.replace(/_/g, ' '));
-            this.phaseText.setColor(color);
-            this.phasePillBg.setStrokeStyle(1.5, strokeColor, 0.9);
-            this.glowLine.setFillStyle(strokeColor, 0.9);
+        gameEvents.on('phase:serverChanged', (data) => {
+            this.updatePhaseDisplay(data.phase || data.to);
         });
 
         gameEvents.on('phase:timerTick', (data) => {
