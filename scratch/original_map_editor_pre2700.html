@@ -1,0 +1,1206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dusk Village - Site Plan & Interior Layout Editor</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@500;700;800&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background-color: #0F172A;
+            color: #F8FAFC;
+            font-family: 'Inter', sans-serif;
+            display: flex;
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+        }
+
+        /* Sidebar Panel */
+        #sidebar {
+            width: 350px;
+            background: #1E293B;
+            border-right: 2px solid #334155;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            overflow-y: auto;
+            z-index: 10;
+            box-shadow: 4px 0 24px rgba(0, 0, 0, 0.4);
+        }
+
+        h1 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 19px;
+            font-weight: 800;
+            color: #F59E0B;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .map-mode-box {
+            background: #0F172A;
+            border: 1.5px solid #38BDF8;
+            border-radius: 8px;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .map-mode-label {
+            font-size: 11px;
+            font-weight: 700;
+            color: #38BDF8;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        select.map-select {
+            width: 100%;
+            padding: 8px;
+            background: #1E293B;
+            color: #F8FAFC;
+            border: 1px solid #475569;
+            border-radius: 6px;
+            font-family: 'Outfit', sans-serif;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            outline: none;
+        }
+        select.map-select:focus {
+            border-color: #F59E0B;
+        }
+
+        .section-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 11px;
+            font-weight: 700;
+            color: #94A3B8;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-top: 4px;
+            border-bottom: 1px solid #334155;
+            padding-bottom: 4px;
+        }
+
+        .palette-group {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 6px;
+        }
+
+        .btn-tool {
+            padding: 7px 8px;
+            background: #0F172A;
+            border: 1.5px solid #334155;
+            color: #CBD5E1;
+            cursor: pointer;
+            text-align: left;
+            font-size: 11px;
+            font-weight: 600;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.15s ease;
+        }
+
+        .btn-tool:hover {
+            border-color: #38BDF8;
+            background: #334155;
+            color: #F8FAFC;
+        }
+
+        .btn-tool.active {
+            background: #D97706;
+            color: #FFFFFF;
+            border-color: #F59E0B;
+            box-shadow: 0 0 10px rgba(245, 158, 11, 0.4);
+        }
+
+        .btn-tool.danger {
+            border-color: #EF4444;
+            color: #FCA5A5;
+        }
+        .btn-tool.danger:hover, .btn-tool.danger.active {
+            background: #DC2626;
+            color: #FFFFFF;
+            border-color: #EF4444;
+            box-shadow: 0 0 10px rgba(239, 68, 68, 0.4);
+        }
+
+        /* Top Control Bar */
+        #topbar {
+            height: 48px;
+            background: #1E293B;
+            border-bottom: 2px solid #334155;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            position: absolute;
+            top: 0;
+            left: 350px;
+            right: 0;
+            z-index: 5;
+        }
+
+        .inspector-badge {
+            font-family: 'Outfit', monospace;
+            font-size: 12px;
+            font-weight: 700;
+            color: #38BDF8;
+            background: #0F172A;
+            padding: 6px 12px;
+            border-radius: 6px;
+            border: 1px solid #334155;
+        }
+
+        .top-controls {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-top {
+            padding: 6px 9px;
+            background: #334155;
+            color: #F8FAFC;
+            border: 1px solid #475569;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .btn-top:hover {
+            background: #475569;
+        }
+
+        /* Canvas Workspace */
+        #canvas-container {
+            flex: 1;
+            display: block;
+            background: #090D16;
+            overflow: auto;
+            padding: 64px 32px 32px 32px;
+            position: relative;
+            box-sizing: border-box;
+        }
+
+        canvas {
+            display: block;
+            margin: 0 auto;
+            image-rendering: pixelated;
+            border: 2px solid #334155;
+            box-shadow: 0 0 32px rgba(0, 0, 0, 0.8);
+            background: #274E13;
+            cursor: crosshair;
+        }
+
+        .action-btn-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .action-btn {
+            padding: 8px;
+            background: #10B981;
+            color: #FFF;
+            border: none;
+            font-family: 'Outfit', sans-serif;
+            font-size: 11px;
+            font-weight: 700;
+            border-radius: 6px;
+            cursor: pointer;
+            text-align: center;
+            letter-spacing: 0.5px;
+            transition: background 0.15s ease;
+        }
+
+        .action-btn:hover { background: #059669; }
+        .action-btn.secondary { background: #3B82F6; }
+        .action-btn.secondary:hover { background: #2563EB; }
+        .action-btn.danger { background: #EF4444; }
+        .action-btn.danger:hover { background: #DC2626; }
+
+        textarea {
+            width: 100%;
+            height: 75px;
+            background: #0F172A;
+            color: #10B981;
+            border: 1px solid #334155;
+            font-family: monospace;
+            font-size: 11px;
+            padding: 8px;
+            border-radius: 6px;
+            resize: vertical;
+        }
+    </style>
+</head>
+<body>
+    <div id="sidebar">
+        <h1>🗺️ Dusk Village Editor</h1>
+
+        <!-- Map Mode Selector -->
+        <div class="map-mode-box">
+            <span class="map-mode-label">Editing Map Layer:</span>
+            <select id="map-mode-select" class="map-select" onchange="switchMapMode(this.value)">
+                <option value="village_exterior">🗺️ Village Exterior (94×70)</option>
+                <option value="interior_villagehall">🏛️ Interior: Village Hall (15×10)</option>
+                <option value="interior_clinic">🏥 Interior: Clinic (15×10)</option>
+                <option value="interior_library">📚 Interior: Library (15×10)</option>
+                <option value="interior_school">🏫 Interior: School (15×10)</option>
+                <option value="interior_house">🏠 Interior: Cottage House (15×10)</option>
+            </select>
+        </div>
+
+        <!-- Universal Editor Tools -->
+        <div class="section-title">Editor Tools</div>
+        <div class="palette-group">
+            <button class="btn-tool active" id="brush-1" onclick="setBrushSize(1)">🖌️ 1×1 Brush</button>
+            <button class="btn-tool" id="brush-2" onclick="setBrushSize(2)">🖌️ 2×2 Path</button>
+            <button class="btn-tool" id="brush-3" onclick="setBrushSize(3)">🖌️ 3×3 Fill</button>
+            <button class="btn-tool" id="brush-bucket" onclick="setBrushSize('bucket')">🪣 Bucket Fill</button>
+            <button class="btn-tool" id="tool-eyedrop" onclick="selectTool('eyedrop')">🔍 Eyedropper</button>
+            <button class="btn-tool danger" id="tool-erase" onclick="selectTool('erase')">❌ ERASE TOOL</button>
+        </div>
+
+        <!-- EXTERIOR TOOLS PALETTE -->
+        <div id="exterior-tools-container">
+            <div class="section-title">Ground Tiles & Roads</div>
+            <div class="palette-group">
+                <button class="btn-tool" id="tool-grass" onclick="selectTool('grass')">🟩 Grass (1)</button>
+                <button class="btn-tool" id="tool-dirt" onclick="selectTool('dirt')">🟫 Dirt Path (2)</button>
+                <button class="btn-tool" id="tool-cobble" onclick="selectTool('cobble')">⬜ Cobble Plaza (3)</button>
+                <button class="btn-tool" id="tool-stone" onclick="selectTool('stone')">🧱 Stone Border (19)</button>
+                <button class="btn-tool" id="tool-water" onclick="selectTool('water')">🟦 Water Stream (4)</button>
+            </div>
+
+            <div class="section-title">Civic Buildings & Hub</div>
+            <div class="palette-group">
+                <button class="btn-tool" id="tool-hall" onclick="selectTool('hall')">🏛️ Village Hall (7x7)</button>
+                <button class="btn-tool" id="tool-clinic" onclick="selectTool('clinic')">🏥 Clinic (7x7)</button>
+                <button class="btn-tool" id="tool-library" onclick="selectTool('library')">📚 Library (7x7)</button>
+                <button class="btn-tool" id="tool-school" onclick="selectTool('school')">🏫 School (7x7)</button>
+                <button class="btn-tool" id="tool-statue" onclick="selectTool('statue')">🗿 Angel Statue (3x7)</button>
+                <button class="btn-tool" id="tool-fountain" onclick="selectTool('fountain')">⛲ Fountain (3x3)</button>
+            </div>
+
+            <div class="section-title">Trees, Bushes & Props</div>
+            <div class="palette-group">
+                <button class="btn-tool" id="tool-oak" onclick="selectTool('oak')">🌳 Golden Oak (1x1)</button>
+                <button class="btn-tool" id="tool-maple" onclick="selectTool('maple')">🍁 Crimson Maple (1x1)</button>
+                <button class="btn-tool" id="tool-pine" onclick="selectTool('pine')">🌲 Evergreen Pine (1x1)</button>
+                <button class="btn-tool" id="tool-bush_sm" onclick="selectTool('bush_sm')">🟢 Small Bush (1x1)</button>
+                <button class="btn-tool" id="tool-bush_lg" onclick="selectTool('bush_lg')">🌳 Large Bush (1x1)</button>
+                <button class="btn-tool" id="tool-bush_rose" onclick="selectTool('bush_rose')">🌹 Rose Bush (1x1)</button>
+                <button class="btn-tool" id="tool-bush_gold" onclick="selectTool('bush_gold')">🌼 Marigold Bush (1x1)</button>
+                <button class="btn-tool" id="tool-fence" onclick="selectTool('fence')">🪜 Picket Fence (1x1)</button>
+                <button class="btn-tool" id="tool-mailbox" onclick="selectTool('mailbox')">📮 Mailbox (1x1)</button>
+                <button class="btn-tool" id="tool-leaves" onclick="selectTool('leaves')">🍂 Leaves (1x1)</button>
+            </div>
+
+            <div class="section-title">Player Cottages (5x5)</div>
+            <div class="palette-group">
+                <button class="btn-tool" id="tool-h01" onclick="selectTool('h01')">🏠 Cottage H01</button>
+                <button class="btn-tool" id="tool-h02" onclick="selectTool('h02')">🏠 Cottage H02</button>
+                <button class="btn-tool" id="tool-h03" onclick="selectTool('h03')">🏠 Cottage H03</button>
+                <button class="btn-tool" id="tool-h04" onclick="selectTool('h04')">🏠 Cottage H04</button>
+                <button class="btn-tool" id="tool-h05" onclick="selectTool('h05')">🏠 Cottage H05</button>
+                <button class="btn-tool" id="tool-h06" onclick="selectTool('h06')">🏠 Cottage H06</button>
+                <button class="btn-tool" id="tool-h07" onclick="selectTool('h07')">🏠 Cottage H07</button>
+                <button class="btn-tool" id="tool-h08" onclick="selectTool('h08')">🏠 Cottage H08</button>
+                <button class="btn-tool" id="tool-h09" onclick="selectTool('h09')">🏠 Cottage H09</button>
+                <button class="btn-tool" id="tool-h10" onclick="selectTool('h10')">🏠 Cottage H10</button>
+            </div>
+        </div>
+
+        <!-- INTERIOR TOOLS PALETTE -->
+        <div id="interior-tools-container" style="display:none;">
+            <div class="section-title">Interior Flooring & Walls</div>
+            <div class="palette-group">
+                <button class="btn-tool" id="tool-floor_wood" onclick="selectTool('floor_wood')">🪵 Timber Floor (1)</button>
+                <button class="btn-tool" id="tool-floor_slate" onclick="selectTool('floor_slate')">📚 Slate Floor (2)</button>
+                <button class="btn-tool" id="tool-floor_clinic" onclick="selectTool('floor_clinic')">🏥 Clinic Tile (3)</button>
+                <button class="btn-tool" id="tool-floor_hall" onclick="selectTool('floor_hall')">🏛️ Hall Timber (4)</button>
+                <button class="btn-tool" id="tool-floor_school" onclick="selectTool('floor_school')">🏫 School Floor (5)</button>
+                <button class="btn-tool" id="tool-wall_slate" onclick="selectTool('wall_slate')">🧱 Wall Border (10)</button>
+            </div>
+
+            <div class="section-title">Stations, Furniture & Props</div>
+            <div class="palette-group">
+                <button class="btn-tool" id="tool-prop_bookshelf" onclick="selectTool('prop_bookshelf')">📚 Bookshelf (3x3)</button>
+                <button class="btn-tool" id="tool-prop_db_terminal" onclick="selectTool('prop_db_terminal')">💻 Terminal (2x2)</button>
+                <button class="btn-tool" id="tool-prop_verify_podium" onclick="selectTool('prop_verify_podium')">🔍 Podium (3x2)</button>
+                <button class="btn-tool" id="tool-prop_council_table" onclick="selectTool('prop_council_table')">🏛️ Council Table (4x2)</button>
+                <button class="btn-tool" id="tool-prop_lectern" onclick="selectTool('prop_lectern')">🪑 Lectern Desk (2x2)</button>
+                <button class="btn-tool" id="tool-prop_school_desk" onclick="selectTool('prop_school_desk')">🏫 School Desk (1x1)</button>
+                <button class="btn-tool" id="tool-prop_chalkboard" onclick="selectTool('prop_chalkboard')">🎓 Chalkboard (2x2)</button>
+                <button class="btn-tool" id="tool-prop_medicine_cabinet" onclick="selectTool('prop_medicine_cabinet')">💊 Med Shelf (2x2)</button>
+                <button class="btn-tool" id="tool-prop_exam_table" onclick="selectTool('prop_exam_table')">🩺 Exam Table (2x1)</button>
+                <button class="btn-tool" id="tool-prop_cottage_bed" onclick="selectTool('prop_cottage_bed')">🛏️ Bed (2x2)</button>
+                <button class="btn-tool" id="tool-prop_filing_cabinet" onclick="selectTool('prop_filing_cabinet')">📁 Cabinet (1x2)</button>
+                <button class="btn-tool" id="tool-prop_notice_board" onclick="selectTool('prop_notice_board')">📜 Notice Board (2x2)</button>
+                <button class="btn-tool" id="tool-prop_barrels_crates" onclick="selectTool('prop_barrels_crates')">📦 Crates (2x2)</button>
+            </div>
+        </div>
+
+        <!-- Collision & Passability Layer -->
+        <div class="section-title" style="color:#EF4444;">🚫 Collision & Passability</div>
+        <div class="palette-group">
+            <button class="btn-tool" id="tool-solid" onclick="selectTool('solid')" style="border-color:#EF4444; color:#FCA5A5;">🚫 Solid (Impassable)</button>
+            <button class="btn-tool" id="tool-passable" onclick="selectTool('passable')" style="border-color:#10B981; color:#6EE7B7;">🚶 Passable (Walkable)</button>
+        </div>
+        <div class="action-btn-group" style="margin-top:6px;">
+            <button class="action-btn secondary" style="background:#DC2626; font-size:11px;" onclick="autoGenerateSolids()">⚡ AUTO-GENERATE SOLIDS</button>
+            <button class="action-btn danger" style="font-size:11px; padding:6px;" onclick="clearAllSolids()">🧹 CLEAR ALL SOLIDS</button>
+        </div>
+
+        <!-- File Storage & Actions -->
+        <div class="section-title">Map Actions & File Storage</div>
+        <div class="action-btn-group">
+            <button class="action-btn" onclick="exportJSON()">💾 EXPORT MAP JSON</button>
+            <button class="action-btn secondary" onclick="downloadJSON()">📥 DOWNLOAD FILE</button>
+            <button class="action-btn secondary" style="background:#10B981" onclick="saveToServer()">☁️ SAVE TO SERVER</button>
+            <input type="file" id="import-file" accept=".json" style="display:none" onchange="importJSON(event)">
+            <button class="action-btn secondary" style="background:#8B5CF6;" onclick="document.getElementById('import-file').click()">📂 IMPORT MAP FILE</button>
+            <button class="action-btn danger" onclick="clearAllStructures()">🧹 CLEAR ALL OBJECTS</button>
+        </div>
+
+        <textarea id="json-output" placeholder="JSON map output will generate here..."></textarea>
+    </div>
+
+    <!-- Top Status Bar -->
+    <div id="topbar">
+        <div class="inspector-badge" id="tile-inspector">GRID: [X: 0, Y: 0] | TOOL: 1x1 Brush</div>
+        <div class="top-controls">
+            <button class="btn-top" id="btn-pan" onclick="togglePanMode()">🖐️ Pan Map (Space)</button>
+            <button class="btn-top" onclick="undo()">↩️ Undo (Ctrl+Z)</button>
+            <button class="btn-top" onclick="redo()">↪️ Redo (Ctrl+Y)</button>
+            <button class="btn-top" id="btn-grid" onclick="toggleGrid()">⊞ Grid</button>
+            <button class="btn-top" id="btn-layer-ground" onclick="toggleLayer('ground')" style="background:#10B981">🟩 Ground</button>
+            <button class="btn-top" id="btn-layer-struct" onclick="toggleLayer('structures')" style="background:#10B981">🏠 Struct</button>
+            <button class="btn-top" id="btn-layer-collision" onclick="toggleLayer('collision')" style="background:#EF4444">🚫 Solids</button>
+            <button class="btn-top" onclick="setZoom(0.5)">0.5x</button>
+            <button class="btn-top" onclick="setZoom(1)">1x</button>
+            <button class="btn-top" onclick="setZoom(1.5)">1.5x</button>
+            <button class="btn-top" onclick="setZoom(2)">2x</button>
+            <button class="btn-top" onclick="setZoom(2.5)">2.5x</button>
+            <button class="btn-top" onclick="setZoom(3)">3x</button>
+        </div>
+    </div>
+
+    <!-- Main Canvas Viewport -->
+    <div id="canvas-container">
+        <canvas id="mapCanvas" width="1504" height="1120"></canvas>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('mapCanvas');
+        const ctx = canvas.getContext('2d');
+        const tileSize = 16;
+
+        let currentMapKey = 'village_exterior';
+        let cols = 94, rows = 70;
+
+        let showGrid = true;
+        let showGround = true;
+        let showStructures = true;
+        let showCollision = true;
+
+        let grid = Array(rows).fill(0).map(() => Array(cols).fill(1));
+        let collisionGrid = Array(rows).fill(0).map(() => Array(cols).fill(0));
+        let placedStructures = [];
+        let activeTool = 'dirt';
+        let brushSize = 1;
+        let zoomLevel = 1;
+
+        let historyStack = [];
+        let redoStack = [];
+
+        // Image Cache
+        const images = {};
+        const grassTexture = new Image();
+        grassTexture.src = '/assets/sprites/terrain/tile_ground_grass_01.png';
+        grassTexture.onload = () => renderMap();
+
+        // Structure Asset Registry
+        const STRUCTURES = {
+            hall: { name: 'Village Hall', w: 7, h: 7, src: '/assets/sprites/buildings/sprite_building_villagehall.png', sx: 0, sy: 0, sw: 336, sh: 336 },
+            clinic: { name: 'Clinic', w: 7, h: 7, src: '/assets/sprites/buildings/sprite_building_clinic.png', sx: 0, sy: 0, sw: 336, sh: 336 },
+            library: { name: 'Library', w: 7, h: 7, src: '/assets/sprites/buildings/sprite_building_library.png', sx: 0, sy: 0, sw: 336, sh: 336 },
+            school: { name: 'School', w: 7, h: 7, src: '/assets/sprites/buildings/sprite_building_school.png', sx: 0, sy: 0, sw: 336, sh: 336 },
+            statue: { name: 'Angel Statue', w: 3, h: 7, src: '/assets/sprites/buildings/sprite_statue_angel.png', sx: 0, sy: 0, sw: 192, sh: 384 },
+            fountain: { name: 'Village Fountain', w: 3, h: 3, src: '/assets/sprites/buildings/sprite_fountain.png', sx: 0, sy: 0, sw: 183, sh: 153 },
+            oak: { name: 'Golden Oak Tree', w: 1, h: 1, src: '/assets/sprites/terrain/spr_tree_autumn_oak.png', sx: 0, sy: 0, sw: 32, sh: 48 },
+            maple: { name: 'Crimson Maple Tree', w: 1, h: 1, src: '/assets/sprites/terrain/spr_tree_autumn_oak.png', sx: 32, sy: 0, sw: 32, sh: 48 },
+            pine: { name: 'Evergreen Pine Tree', w: 1, h: 1, src: '/assets/sprites/terrain/sprite_tree_pine.png', sx: 0, sy: 0, sw: 192, sh: 384 },
+            bush_sm: { name: 'Small Round Bush', w: 1, h: 1, src: '/assets/sprites/terrain/spr_bush_circular.png', sx: 0, sy: 0, sw: 16, sh: 16 },
+            bush_rose: { name: 'Flowering Rose Bush', w: 1, h: 1, src: '/assets/sprites/terrain/sprite_bush_rose.png', sx: 0, sy: 0, sw: 384, sh: 288 },
+            bush_gold: { name: 'Golden Marigold Bush', w: 1, h: 1, src: '/assets/sprites/terrain/spr_bush_circular.png', sx: 32, sy: 0, sw: 16, sh: 16 },
+            bush_lg: { name: 'Large Round Bush', w: 1, h: 1, src: '/assets/sprites/terrain/spr_bush_circular.png', sx: 0, sy: 16, sw: 32, sh: 32 },
+            fence: { name: 'Picket Fence', w: 1, h: 1, src: '/assets/sprites/terrain/spr_fences_gates.png', sx: 0, sy: 0, sw: 16, sh: 16 },
+            mailbox: { name: 'Mailbox', w: 1, h: 1, src: '/assets/sprites/terrain/spr_mailboxes.png', sx: 0, sy: 0, sw: 16, sh: 16 },
+            leaves: { name: 'Autumn Leaves', w: 1, h: 1, src: '/assets/sprites/terrain/spr_foliage_bushes.png', sx: 32, sy: 0, sw: 16, sh: 16 },
+
+            // Interior Props & Stations
+            prop_council_table: { name: 'Town Records Table', w: 4, h: 2, src: '/assets/sprites/props/interior_props.png', sx: 0, sy: 0, sw: 64, sh: 24 },
+            prop_filing_cabinet: { name: 'Filing Cabinet', w: 1, h: 2, src: '/assets/sprites/props/interior_props.png', sx: 64, sy: 0, sw: 16, sh: 32 },
+            prop_lectern: { name: 'Lectern Desk', w: 2, h: 2, src: '/assets/sprites/props/interior_props.png', sx: 80, sy: 0, sw: 32, sh: 32 },
+            prop_verify_podium: { name: 'Verification Podium', w: 3, h: 2, src: '/assets/sprites/props/interior_props.png', sx: 0, sy: 32, sw: 48, sh: 32 },
+            prop_db_terminal: { name: 'Database Terminal', w: 2, h: 2, src: '/assets/sprites/props/interior_props.png', sx: 48, sy: 32, sw: 32, sh: 32 },
+            prop_bookshelf: { name: 'Bookshelf', w: 3, h: 3, src: '/assets/sprites/props/interior_props.png', sx: 80, sy: 32, sw: 48, sh: 48 },
+            prop_school_desk: { name: 'School Desk', w: 1, h: 1, src: '/assets/sprites/props/interior_props.png', sx: 0, sy: 80, sw: 16, sh: 16 },
+            prop_chalkboard: { name: 'Chalkboard', w: 2, h: 2, src: '/assets/sprites/props/interior_props.png', sx: 16, sy: 80, sw: 32, sh: 24 },
+            prop_medicine_cabinet: { name: 'Pharmacy Shelf', w: 2, h: 2, src: '/assets/sprites/props/interior_props.png', sx: 48, sy: 80, sw: 32, sh: 32 },
+            prop_exam_table: { name: 'Exam Table', w: 2, h: 1, src: '/assets/sprites/props/interior_props.png', sx: 80, sy: 80, sw: 32, sh: 16 },
+            prop_cottage_bed: { name: 'Cottage Bed', w: 2, h: 2, src: '/assets/sprites/props/interior_props.png', sx: 112, sy: 80, sw: 32, sh: 24 },
+            prop_notice_board: { name: 'Notice Board', w: 2, h: 2, src: '/assets/sprites/props/outdoor_props.png', sx: 32, sy: 32, sw: 32, sh: 32 },
+            prop_barrels_crates: { name: 'Barrels & Crates', w: 2, h: 2, src: '/assets/sprites/props/outdoor_props.png', sx: 0, sy: 64, sw: 32, sh: 32 }
+        };
+
+        // 10 Cottages H01-H10 (5x5)
+        for (let i = 1; i <= 10; i++) {
+            const num = String(i).padStart(2, '0');
+            STRUCTURES['h' + num] = {
+                name: `Cottage H${num}`,
+                w: 5,
+                h: 5,
+                src: `/assets/sprites/buildings/sprite_building_player-house-${num}.png`,
+                sx: 0,
+                sy: 0,
+                sw: 336,
+                sh: 336
+            };
+        }
+
+        Object.entries(STRUCTURES).forEach(([key, data]) => {
+            if (!images[data.src]) {
+                const img = new Image();
+                img.src = data.src;
+                img.onload = () => renderMap();
+                images[data.src] = img;
+            }
+        });
+
+        function pushHistory() {
+            if (historyStack.length > 25) historyStack.shift();
+            historyStack.push({
+                grid: JSON.parse(JSON.stringify(grid)),
+                collision: JSON.parse(JSON.stringify(collisionGrid)),
+                structures: JSON.parse(JSON.stringify(placedStructures))
+            });
+            redoStack = [];
+        }
+
+        function undo() {
+            if (historyStack.length === 0) return;
+            redoStack.push({
+                grid: JSON.parse(JSON.stringify(grid)),
+                collision: JSON.parse(JSON.stringify(collisionGrid)),
+                structures: JSON.parse(JSON.stringify(placedStructures))
+            });
+            const state = historyStack.pop();
+            grid = state.grid;
+            collisionGrid = state.collision || Array(rows).fill(0).map(() => Array(cols).fill(0));
+            placedStructures = state.structures;
+            renderMap();
+        }
+
+        function redo() {
+            if (redoStack.length === 0) return;
+            historyStack.push({
+                grid: JSON.parse(JSON.stringify(grid)),
+                collision: JSON.parse(JSON.stringify(collisionGrid)),
+                structures: JSON.parse(JSON.stringify(placedStructures))
+            });
+            const state = redoStack.pop();
+            grid = state.grid;
+            collisionGrid = state.collision || Array(rows).fill(0).map(() => Array(cols).fill(0));
+            placedStructures = state.structures;
+            renderMap();
+        }
+
+        // Mode Switching: Exterior vs Interior
+        async function switchMapMode(mapKey) {
+            currentMapKey = mapKey;
+            const isExterior = mapKey === 'village_exterior';
+            document.getElementById('exterior-tools-container').style.display = isExterior ? 'block' : 'none';
+            document.getElementById('interior-tools-container').style.display = isExterior ? 'none' : 'block';
+
+            if (isExterior) {
+                cols = 94;
+                rows = 70;
+                setZoom(1);
+                selectTool('dirt');
+                await loadLayoutFile();
+            } else {
+                // Interior Room: 15x10 tiles = 240x160px
+                cols = 15;
+                rows = 10;
+                setZoom(2.5);
+                selectTool('floor_wood');
+                await loadInteriorFile(mapKey);
+            }
+            resizeCanvas();
+            renderMap();
+        }
+
+        function resizeCanvas() {
+            canvas.width = cols * tileSize;
+            canvas.height = rows * tileSize;
+            canvas.style.width = `${cols * tileSize * zoomLevel}px`;
+            canvas.style.height = `${rows * tileSize * zoomLevel}px`;
+        }
+
+        // Auto-Generate Solid Collision Grid
+        function autoGenerateSolids() {
+            pushHistory();
+            for (let y = 0; y < rows; y++) for (let x = 0; x < cols; x++) collisionGrid[y][x] = 0;
+
+            if (currentMapKey === 'village_exterior') {
+                // Forest border trees (outer 5 tiles)
+                for (let y = 0; y < rows; y++) {
+                    for (let x = 0; x < cols; x++) {
+                        if (y < 4 || y >= 66 || x < 4 || x >= 90) collisionGrid[y][x] = 1;
+                    }
+                }
+
+                // Structures
+                placedStructures.forEach(s => {
+                    const isBldg = ['hall', 'clinic', 'library', 'school'].includes(s.key) || (s.key && s.key.startsWith('h') && s.key !== 'hall');
+                    const isStatue = s.key === 'statue';
+                    const isFountain = s.key === 'fountain';
+                    const isTree = ['oak', 'maple', 'pine'].includes(s.key);
+
+                    if (isBldg) {
+                        for (let dy = 1; dy < s.h; dy++) {
+                            for (let dx = 0; dx < s.w; dx++) {
+                                const ty = s.y + dy, tx = s.x + dx;
+                                if (ty >= 0 && ty < rows && tx >= 0 && tx < cols) collisionGrid[ty][tx] = 1;
+                            }
+                        }
+                    } else if (isStatue) {
+                        for (let dy = 3; dy < s.h; dy++) {
+                            for (let dx = 0; dx < s.w; dx++) {
+                                const ty = s.y + dy, tx = s.x + dx;
+                                if (ty >= 0 && ty < rows && tx >= 0 && tx < cols) collisionGrid[ty][tx] = 1;
+                            }
+                        }
+                    } else if (isFountain) {
+                        for (let dy = 0; dy < s.h; dy++) {
+                            for (let dx = 0; dx < s.w; dx++) {
+                                const ty = s.y + dy, tx = s.x + dx;
+                                if (ty >= 0 && ty < rows && tx >= 0 && tx < cols) collisionGrid[ty][tx] = 1;
+                            }
+                        }
+                    } else if (isTree) {
+                        if (s.y >= 0 && s.y < rows && s.x >= 0 && s.x < cols) collisionGrid[s.y][s.x] = 1;
+                    }
+                });
+            } else {
+                // Interior Room: Outer walls solid, door exit open
+                for (let x = 0; x < cols; x++) { collisionGrid[0][x] = 1; }
+                for (let y = 0; y < rows; y++) { collisionGrid[y][0] = 1; collisionGrid[y][cols - 1] = 1; }
+                for (let x = 0; x < cols; x++) {
+                    if (x !== Math.floor(cols / 2)) collisionGrid[rows - 1][x] = 1;
+                }
+                // Interior props solid
+                placedStructures.forEach(s => {
+                    const st = STRUCTURES[s.key];
+                    if (st) {
+                        for (let dy = 0; dy < st.h; dy++) {
+                            for (let dx = 0; dx < st.w; dx++) {
+                                const ty = s.y + dy, tx = s.x + dx;
+                                if (ty >= 0 && ty < rows && tx >= 0 && tx < cols) collisionGrid[ty][tx] = 1;
+                            }
+                        }
+                    }
+                });
+            }
+            renderMap();
+            alert('⚡ Auto-generated solid collision grid!');
+        }
+
+        function clearAllSolids() {
+            if (confirm("Clear all solid collision tiles?")) {
+                pushHistory();
+                for (let y = 0; y < rows; y++) for (let x = 0; x < cols; x++) collisionGrid[y][x] = 0;
+                renderMap();
+            }
+        }
+
+        function cancelPanMode() {
+            if (isPanMode) {
+                isPanMode = false;
+                const panBtn = document.getElementById('btn-pan');
+                if (panBtn) panBtn.classList.remove('active');
+                canvas.style.cursor = 'crosshair';
+            }
+        }
+
+        function selectTool(tool) {
+            cancelPanMode();
+            activeTool = tool;
+            document.querySelectorAll('.btn-tool').forEach(b => b.classList.remove('active'));
+            const el = document.getElementById('tool-' + tool);
+            if (el) el.classList.add('active');
+            updateInspector(hoverTile.x, hoverTile.y);
+            renderMap();
+        }
+
+        function setBrushSize(size) {
+            cancelPanMode();
+            brushSize = size;
+            document.querySelectorAll('[id^="brush-"]').forEach(b => b.classList.remove('active'));
+            const el = document.getElementById('brush-' + size);
+            if (el) el.classList.add('active');
+        }
+
+        const container = document.getElementById('canvas-container');
+        let isPanMode = false;
+        let isPanning = false;
+        let startPanX = 0, startPanY = 0;
+        let startScrollLeft = 0, startScrollTop = 0;
+        let isSpacePressed = false;
+
+        function togglePanMode() {
+            isPanMode = !isPanMode;
+            const btn = document.getElementById('btn-pan');
+            if (isPanMode) {
+                btn.classList.add('active');
+                canvas.style.cursor = 'grab';
+            } else {
+                btn.classList.remove('active');
+                canvas.style.cursor = 'crosshair';
+            }
+            updateInspector(hoverTile.x, hoverTile.y);
+        }
+
+        function setZoom(level) {
+            zoomLevel = level;
+            canvas.style.width = `${cols * tileSize * zoomLevel}px`;
+            canvas.style.height = `${rows * tileSize * zoomLevel}px`;
+            canvas.style.transform = 'none';
+            canvas.style.margin = '0 auto';
+        }
+
+        function toggleGrid() {
+            showGrid = !showGrid;
+            const btn = document.getElementById('btn-grid');
+            btn.style.background = showGrid ? '' : '#475569';
+            renderMap();
+        }
+
+        function toggleLayer(layer) {
+            if (layer === 'ground') {
+                showGround = !showGround;
+                document.getElementById('btn-layer-ground').style.background = showGround ? '#10B981' : '#475569';
+            } else if (layer === 'structures') {
+                showStructures = !showStructures;
+                document.getElementById('btn-layer-struct').style.background = showStructures ? '#10B981' : '#475569';
+            } else if (layer === 'collision') {
+                showCollision = !showCollision;
+                document.getElementById('btn-layer-collision').style.background = showCollision ? '#EF4444' : '#475569';
+            }
+            renderMap();
+        }
+
+        async function saveToServer() {
+            exportJSON();
+            const jsonText = document.getElementById('json-output').value;
+            try {
+                const res = await fetch('/save-layout', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: jsonText
+                });
+                if (res.ok) {
+                    alert(`✅ Map saved to server (${currentMapKey})!`);
+                } else {
+                    alert('❌ Save failed: ' + res.statusText);
+                }
+            } catch (err) {
+                alert('❌ Save failed: ' + err.message);
+            }
+        }
+
+        let isMouseDown = false;
+        let hoverTile = { x: 0, y: 0 };
+
+        canvas.addEventListener('mousedown', (e) => {
+            if (isPanMode || isSpacePressed || e.button === 1) {
+                isPanning = true;
+                startPanX = e.clientX;
+                startPanY = e.clientY;
+                startScrollLeft = container.scrollLeft;
+                startScrollTop = container.scrollTop;
+                canvas.style.cursor = 'grabbing';
+                e.preventDefault();
+                return;
+            }
+            pushHistory();
+            isMouseDown = true;
+            handleDraw(e);
+        });
+
+        canvas.addEventListener('mousemove', (e) => {
+            if (isPanning) {
+                const dx = e.clientX - startPanX;
+                const dy = e.clientY - startPanY;
+                container.scrollLeft = startScrollLeft - dx;
+                container.scrollTop = startScrollTop - dy;
+                return;
+            }
+            const rect = canvas.getBoundingClientRect();
+            const scaleFactor = (rect.width / (cols * tileSize));
+            const x = Math.floor((e.clientX - rect.left) / (tileSize * scaleFactor));
+            const y = Math.floor((e.clientY - rect.top) / (tileSize * scaleFactor));
+            
+            if (x >= 0 && x < cols && y >= 0 && y < rows) {
+                hoverTile = { x, y };
+                updateInspector(x, y);
+                if (isMouseDown) handleDraw(e);
+                renderMap();
+            }
+        });
+
+        window.addEventListener('mouseup', () => {
+            if (isPanning) {
+                isPanning = false;
+                canvas.style.cursor = (isPanMode || isSpacePressed) ? 'grab' : 'crosshair';
+            }
+            isMouseDown = false;
+        });
+
+        canvas.addEventListener('contextmenu', (e) => { e.preventDefault(); pushHistory(); handleErase(e); });
+
+        // Keyboard Shortcuts
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                cancelPanMode();
+                selectTool(currentMapKey === 'village_exterior' ? 'dirt' : 'floor_wood');
+            }
+            if (e.code === 'Space' && !isSpacePressed && e.target.tagName !== 'TEXTAREA') {
+                isSpacePressed = true;
+                canvas.style.cursor = 'grab';
+                e.preventDefault();
+            }
+            if ((e.ctrlKey || e.metaKey) && e.key === 'z') { e.preventDefault(); undo(); }
+            if ((e.ctrlKey || e.metaKey) && e.key === 'y') { e.preventDefault(); redo(); }
+        });
+
+        window.addEventListener('keyup', (e) => {
+            if (e.code === 'Space') {
+                isSpacePressed = false;
+                if (!isPanMode) canvas.style.cursor = 'crosshair';
+            }
+        });
+
+        function updateInspector(x, y) {
+            const tileVal = grid[y] ? grid[y][x] : '?';
+            const isSolid = collisionGrid[y] && collisionGrid[y][x] === 1;
+            const solidLabel = isSolid ? ' | 🚫 SOLID' : ' | 🚶 Walkable';
+            const toolName = isPanMode ? '🖐️ PAN MODE' : (activeTool === 'solid' ? '🚫 SOLID PAINT' : activeTool === 'passable' ? '🚶 PASSABLE PAINT' : activeTool === 'erase' ? '❌ ERASE' : (STRUCTURES[activeTool] ? STRUCTURES[activeTool].name : activeTool.toUpperCase()));
+            document.getElementById('tile-inspector').innerText = `[${x}, ${y}] Tile: ${tileVal}${solidLabel} | ${toolName} | 🏠 Objects: ${placedStructures.length}`;
+        }
+
+        function handleDraw(e) {
+            const x = hoverTile.x;
+            const y = hoverTile.y;
+
+            if (e.buttons === 1) {
+                if (activeTool === 'solid' || activeTool === 'passable') {
+                    const solidVal = activeTool === 'solid' ? 1 : 0;
+                    const radius = parseInt(brushSize) || 1;
+                    for (let dy = 0; dy < radius; dy++) {
+                        for (let dx = 0; dx < radius; dx++) {
+                            if (y + dy < rows && x + dx < cols) collisionGrid[y + dy][x + dx] = solidVal;
+                        }
+                    }
+                    renderMap();
+                } else if (activeTool === 'erase') {
+                    handleErase(e);
+                } else if (activeTool === 'eyedrop') {
+                    const val = grid[y] ? grid[y][x] : 1;
+                    const tileToTool = { 1: 'grass', 2: 'dirt', 3: 'cobble', 19: 'stone', 4: 'water' };
+                    selectTool(tileToTool[val] || 'grass');
+                } else if (STRUCTURES[activeTool]) {
+                    const st = STRUCTURES[activeTool];
+                    const exists = placedStructures.some(s => s.key === activeTool && s.x === x && s.y === y);
+                    if (!exists) {
+                        placedStructures.push({ key: activeTool, x, y, w: st.w, h: st.h });
+                        renderMap();
+                    }
+                } else if (brushSize === 'bucket') {
+                    floodFill(x, y, getTileValue(activeTool));
+                    renderMap();
+                } else {
+                    const radius = parseInt(brushSize) || 1;
+                    const tileVal = getTileValue(activeTool);
+                    for (let dy = 0; dy < radius; dy++) {
+                        for (let dx = 0; dx < radius; dx++) {
+                            if (y + dy < rows && x + dx < cols) grid[y + dy][x + dx] = tileVal;
+                        }
+                    }
+                    renderMap();
+                }
+            }
+        }
+
+        function handleErase(e) {
+            const x = hoverTile.x;
+            const y = hoverTile.y;
+            const initialCount = placedStructures.length;
+            placedStructures = placedStructures.filter(s => !(x >= s.x && x < s.x + s.w && y >= s.y && y < s.y + s.h));
+            
+            if (placedStructures.length === initialCount) {
+                grid[y][x] = currentMapKey === 'village_exterior' ? 1 : 1;
+                collisionGrid[y][x] = 0;
+            }
+            renderMap();
+        }
+
+        function clearAllStructures() {
+            if (confirm("Clear all placed objects on this map?")) {
+                pushHistory();
+                placedStructures = [];
+                renderMap();
+            }
+        }
+
+        function getTileValue(tool) {
+            if (tool === 'grass') return 1;
+            if (tool === 'dirt') return 2;
+            if (tool === 'cobble') return 3;
+            if (tool === 'stone') return 19;
+            if (tool === 'water') return 4;
+            // Interior flooring
+            if (tool === 'floor_wood') return 1;
+            if (tool === 'floor_slate') return 2;
+            if (tool === 'floor_clinic') return 3;
+            if (tool === 'floor_hall') return 4;
+            if (tool === 'floor_school') return 5;
+            if (tool === 'wall_slate') return 10;
+            return 1;
+        }
+
+        function floodFill(startX, startY, fillVal) {
+            const targetVal = grid[startY][startX];
+            if (targetVal === fillVal) return;
+            const queue = [[startX, startY]];
+            while (queue.length > 0) {
+                const [x, y] = queue.pop();
+                if (x < 0 || x >= cols || y < 0 || y >= rows) continue;
+                if (grid[y][x] === targetVal) {
+                    grid[y][x] = fillVal;
+                    queue.push([x + 1, y], [x - 1, y], [x, y + 1], [x, y - 1]);
+                }
+            }
+        }
+
+        function renderMap() {
+            // Background Canvas Fill
+            if (currentMapKey === 'village_exterior') {
+                if (grassTexture.complete && grassTexture.naturalWidth > 0) {
+                    const pat = ctx.createPattern(grassTexture, 'repeat');
+                    ctx.fillStyle = pat;
+                } else {
+                    ctx.fillStyle = '#38972C';
+                }
+            } else {
+                ctx.fillStyle = '#0F172A'; // Dark Interior backdrop
+            }
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Render Ground / Flooring Tiles
+            if (showGround) {
+                for (let y = 0; y < rows; y++) {
+                    for (let x = 0; x < cols; x++) {
+                        const tile = grid[y][x];
+                        if (currentMapKey === 'village_exterior') {
+                            if (tile === 2) ctx.fillStyle = '#A1672D';      // Dirt Path
+                            else if (tile === 3) ctx.fillStyle = '#6A788A'; // Cobble Plaza
+                            else if (tile === 19) ctx.fillStyle = '#333C47';// Stone Wall Border
+                            else if (tile === 4) ctx.fillStyle = '#2563EB'; // Water Stream
+                            else continue;
+                        } else {
+                            // Interior Tiles
+                            if (tile === 1) ctx.fillStyle = '#4A2E1B';      // Warm Timber
+                            else if (tile === 2) ctx.fillStyle = '#1E293B'; // Slate Library
+                            else if (tile === 3) ctx.fillStyle = '#334155'; // Clinic Slate
+                            else if (tile === 4) ctx.fillStyle = '#582C12'; // Hall Timber
+                            else if (tile === 5) ctx.fillStyle = '#8C5E1A'; // School Timber
+                            else if (tile === 10) ctx.fillStyle = '#0F172A';// Wall Slate Border
+                            else continue;
+                        }
+                        ctx.fillRect(x * tileSize, y * tileSize, tileSize, tileSize);
+                    }
+                }
+            }
+
+            // Grid Lines
+            if (showGrid) {
+                ctx.strokeStyle = currentMapKey === 'village_exterior' ? 'rgba(255, 255, 255, 0.06)' : 'rgba(255, 255, 255, 0.12)';
+                ctx.lineWidth = 1;
+                for (let x = 0; x <= cols; x++) { ctx.beginPath(); ctx.moveTo(x * tileSize, 0); ctx.lineTo(x * tileSize, canvas.height); ctx.stroke(); }
+                for (let y = 0; y <= rows; y++) { ctx.beginPath(); ctx.moveTo(0, y * tileSize); ctx.lineTo(canvas.width, y * tileSize); ctx.stroke(); }
+            }
+
+            // Render Structures / Furniture / Props
+            if (showStructures) {
+                placedStructures.forEach(s => {
+                    const st = STRUCTURES[s.key];
+                    if (st) {
+                        let img = images[st.src];
+                        if (!img) {
+                            img = new Image();
+                            img.src = st.src;
+                            img.onload = () => renderMap();
+                            images[st.src] = img;
+                        }
+                        if (img && img.complete && img.naturalWidth > 0) {
+                            if (s.key === 'pine') {
+                                const drawX = (s.x + 0.5) * tileSize - 16;
+                                const drawY = (s.y + 1) * tileSize - 64;
+                                ctx.drawImage(img, st.sx, st.sy, st.sw, st.sh, drawX, drawY, 32, 64);
+                            } else if (s.key === 'oak' || s.key === 'maple') {
+                                const drawX = (s.x + 0.5) * tileSize - 16;
+                                const drawY = (s.y + 1) * tileSize - 48;
+                                ctx.drawImage(img, st.sx, st.sy, st.sw, st.sh, drawX, drawY, 32, 48);
+                            } else if (s.key === 'bush_rose') {
+                                const drawX = (s.x + 0.5) * tileSize - 10;
+                                const drawY = (s.y + 1) * tileSize - 16;
+                                ctx.drawImage(img, st.sx, st.sy, st.sw, st.sh, drawX, drawY, 20, 16);
+                            } else {
+                                ctx.drawImage(img, st.sx, st.sy, st.sw, st.sh, s.x * tileSize, s.y * tileSize, st.w * tileSize, st.h * tileSize);
+                            }
+                        } else {
+                            ctx.fillStyle = '#F59E0B';
+                            ctx.fillRect(s.x * tileSize, s.y * tileSize, st.w * tileSize, st.h * tileSize);
+                        }
+                    }
+                });
+            }
+
+            // Render Solid Collision Overlay (Red Hatch)
+            if (showCollision) {
+                for (let y = 0; y < rows; y++) {
+                    for (let x = 0; x < cols; x++) {
+                        if (collisionGrid[y] && collisionGrid[y][x] === 1) {
+                            ctx.fillStyle = 'rgba(239, 68, 68, 0.40)';
+                            ctx.fillRect(x * tileSize, y * tileSize, tileSize, tileSize);
+                            ctx.strokeStyle = 'rgba(239, 68, 68, 0.85)';
+                            ctx.lineWidth = 1;
+                            ctx.strokeRect(x * tileSize + 0.5, y * tileSize + 0.5, tileSize - 1, tileSize - 1);
+                            ctx.beginPath();
+                            ctx.moveTo(x * tileSize + 3, y * tileSize + 3);
+                            ctx.lineTo(x * tileSize + tileSize - 3, y * tileSize + tileSize - 3);
+                            ctx.moveTo(x * tileSize + tileSize - 3, y * tileSize + 3);
+                            ctx.lineTo(x * tileSize + 3, y * tileSize + tileSize - 3);
+                            ctx.stroke();
+                        }
+                    }
+                }
+            }
+
+            // Hover Cursor Preview Box
+            if (activeTool === 'solid' || activeTool === 'passable') {
+                const r = parseInt(brushSize) || 1;
+                ctx.fillStyle = activeTool === 'solid' ? 'rgba(239, 68, 68, 0.4)' : 'rgba(16, 185, 129, 0.4)';
+                ctx.strokeStyle = activeTool === 'solid' ? '#EF4444' : '#10B981';
+                ctx.lineWidth = 2;
+                ctx.fillRect(hoverTile.x * tileSize, hoverTile.y * tileSize, r * tileSize, r * tileSize);
+                ctx.strokeRect(hoverTile.x * tileSize, hoverTile.y * tileSize, r * tileSize, r * tileSize);
+            } else if (activeTool === 'erase') {
+                ctx.fillStyle = 'rgba(239, 68, 68, 0.3)';
+                ctx.strokeStyle = '#EF4444';
+                ctx.lineWidth = 2;
+                ctx.fillRect(hoverTile.x * tileSize, hoverTile.y * tileSize, tileSize, tileSize);
+                ctx.strokeRect(hoverTile.x * tileSize, hoverTile.y * tileSize, tileSize, tileSize);
+            } else if (STRUCTURES[activeTool]) {
+                const st = STRUCTURES[activeTool];
+                ctx.fillStyle = 'rgba(245, 158, 11, 0.3)';
+                ctx.strokeStyle = '#F59E0B';
+                ctx.lineWidth = 2;
+                ctx.fillRect(hoverTile.x * tileSize, hoverTile.y * tileSize, st.w * tileSize, st.h * tileSize);
+                ctx.strokeRect(hoverTile.x * tileSize, hoverTile.y * tileSize, st.w * tileSize, st.h * tileSize);
+            } else {
+                const r = parseInt(brushSize) || 1;
+                ctx.strokeStyle = '#38BDF8';
+                ctx.lineWidth = 1.5;
+                ctx.strokeRect(hoverTile.x * tileSize, hoverTile.y * tileSize, r * tileSize, r * tileSize);
+            }
+        }
+
+        function exportJSON() {
+            const flatData = grid.flat();
+            const flatCollision = collisionGrid.flat();
+            const output = {
+                targetMap: currentMapKey,
+                width: cols,
+                height: rows,
+                groundData: flatData,
+                collisionData: flatCollision,
+                structures: placedStructures
+            };
+            document.getElementById('json-output').value = JSON.stringify(output, null, 2);
+            alert(`Map JSON for [${currentMapKey}] exported below!`);
+        }
+
+        function downloadJSON() {
+            exportJSON();
+            const jsonText = document.getElementById('json-output').value;
+            const blob = new Blob([jsonText], { type: 'application/json' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = `${currentMapKey}.json`;
+            a.click();
+        }
+
+        function importJSON(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                try {
+                    const data = JSON.parse(evt.target.result);
+                    const srcCols = data.width || cols;
+                    const srcRows = data.height || rows;
+                    cols = srcCols;
+                    rows = srcRows;
+                    grid = Array(rows).fill(0).map(() => Array(cols).fill(1));
+                    collisionGrid = Array(rows).fill(0).map(() => Array(cols).fill(0));
+
+                    if (data.groundData && Array.isArray(data.groundData)) {
+                        for (let y = 0; y < rows; y++) {
+                            for (let x = 0; x < cols; x++) {
+                                grid[y][x] = data.groundData[y * cols + x] || 1;
+                            }
+                        }
+                    }
+                    if (data.collisionData && Array.isArray(data.collisionData)) {
+                        for (let y = 0; y < rows; y++) {
+                            for (let x = 0; x < cols; x++) {
+                                collisionGrid[y][x] = data.collisionData[y * cols + x] || 0;
+                            }
+                        }
+                    }
+                    if (data.structures && Array.isArray(data.structures)) {
+                        placedStructures = data.structures;
+                    }
+                    resizeCanvas();
+                    renderMap();
+                    alert(`Map loaded: ${srcCols}x${srcRows}`);
+                } catch (err) {
+                    alert('Error parsing JSON map file: ' + err.message);
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        // Live Server Layout Loader
+        async function loadLayoutFile() {
+            try {
+                const res = await fetch('/village_layout.json');
+                if (res.ok) {
+                    const data = await res.json();
+                    cols = data.width || 94;
+                    rows = data.height || 70;
+                    grid = Array(rows).fill(0).map(() => Array(cols).fill(1));
+                    collisionGrid = Array(rows).fill(0).map(() => Array(cols).fill(0));
+
+                    if (data.groundData && Array.isArray(data.groundData)) {
+                        for (let y = 0; y < rows; y++) {
+                            for (let x = 0; x < cols; x++) {
+                                grid[y][x] = data.groundData[y * cols + x] || 1;
+                            }
+                        }
+                    }
+                    if (data.collisionData && Array.isArray(data.collisionData)) {
+                        for (let y = 0; y < rows; y++) {
+                            for (let x = 0; x < cols; x++) {
+                                collisionGrid[y][x] = data.collisionData[y * cols + x] || 0;
+                            }
+                        }
+                    }
+                    if (data.structures && Array.isArray(data.structures)) {
+                        placedStructures = data.structures;
+                    }
+                    resizeCanvas();
+                    renderMap();
+                    console.log('Loaded live village_layout.json into Map Editor!');
+                }
+            } catch (err) {
+                console.warn('Could not load village_layout.json:', err);
+            }
+        }
+
+        // Default Interior Layout Builder
+        async function loadInteriorFile(interiorKey) {
+            grid = Array(rows).fill(0).map(() => Array(cols).fill(1));
+            collisionGrid = Array(rows).fill(0).map(() => Array(cols).fill(0));
+            placedStructures = [];
+
+            // Preset default interior rooms
+            if (interiorKey === 'interior_villagehall') {
+                for (let y = 0; y < rows; y++) for (let x = 0; x < cols; x++) grid[y][x] = 4;
+                placedStructures = [
+                    { key: 'prop_council_table', x: 5, y: 4, w: 4, h: 2 },
+                    { key: 'prop_lectern', x: 11, y: 4, w: 2, h: 2 },
+                    { key: 'prop_filing_cabinet', x: 2, y: 1, w: 1, h: 2 },
+                    { key: 'prop_filing_cabinet', x: 12, y: 1, w: 1, h: 2 },
+                    { key: 'prop_notice_board', x: 1, y: 1, w: 2, h: 2 },
+                    { key: 'prop_barrels_crates', x: 2, y: 4, w: 2, h: 2 }
+                ];
+            } else if (interiorKey === 'interior_library') {
+                for (let y = 0; y < rows; y++) for (let x = 0; x < cols; x++) grid[y][x] = 2;
+                placedStructures = [
+                    { key: 'prop_verify_podium', x: 6, y: 4, w: 3, h: 2 },
+                    { key: 'prop_db_terminal', x: 2, y: 4, w: 2, h: 2 },
+                    { key: 'prop_bookshelf', x: 10, y: 3, w: 3, h: 3 },
+                    { key: 'prop_bookshelf', x: 2, y: 1, w: 3, h: 3 }
+                ];
+            } else if (interiorKey === 'interior_clinic') {
+                for (let y = 0; y < rows; y++) for (let x = 0; x < cols; x++) grid[y][x] = 3;
+                placedStructures = [
+                    { key: 'prop_lectern', x: 5, y: 3, w: 2, h: 2 },
+                    { key: 'prop_medicine_cabinet', x: 11, y: 2, w: 2, h: 2 },
+                    { key: 'prop_exam_table', x: 2, y: 4, w: 2, h: 1 }
+                ];
+            } else if (interiorKey === 'interior_school') {
+                for (let y = 0; y < rows; y++) for (let x = 0; x < cols; x++) grid[y][x] = 5;
+                placedStructures = [
+                    { key: 'prop_chalkboard', x: 6, y: 1, w: 2, h: 2 },
+                    { key: 'prop_lectern', x: 6, y: 3, w: 2, h: 2 },
+                    { key: 'prop_school_desk', x: 3, y: 6, w: 1, h: 1 },
+                    { key: 'prop_school_desk', x: 5, y: 6, w: 1, h: 1 },
+                    { key: 'prop_school_desk', x: 9, y: 6, w: 1, h: 1 },
+                    { key: 'prop_school_desk', x: 11, y: 6, w: 1, h: 1 },
+                    { key: 'prop_notice_board', x: 2, y: 3, w: 2, h: 2 }
+                ];
+            } else {
+                // Cottage
+                for (let y = 0; y < rows; y++) for (let x = 0; x < cols; x++) grid[y][x] = 1;
+                placedStructures = [
+                    { key: 'prop_cottage_bed', x: 2, y: 2, w: 2, h: 2 },
+                    { key: 'prop_db_terminal', x: 10, y: 2, w: 2, h: 2 },
+                    { key: 'prop_barrels_crates', x: 2, y: 6, w: 2, h: 2 }
+                ];
+            }
+            autoGenerateSolids();
+        }
+
+        // Initialize with live exterior map
+        loadLayoutFile();
+    </script>
+</body>
+</html>

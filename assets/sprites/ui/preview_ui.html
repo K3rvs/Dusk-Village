@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Dusk Village - UI Preview</title>
+    <style>
+        body { background: #222; color: #fff; font-family: sans-serif; padding: 20px; }
+        .gallery { display: flex; flex-wrap: wrap; gap: 20px; }
+        .card { background: #333; padding: 10px; border-radius: 8px; text-align: center; }
+        img { image-rendering: pixelated; }
+        .scale2 { transform: scale(2); transform-origin: top left; margin-bottom: 20px; }
+        .scale4 { transform: scale(4); transform-origin: top left; margin-bottom: 40px; }
+        h1, h2 { color: #F6AD55; }
+    </style>
+</head>
+<body>
+    <h1>Dusk Village UI Components</h1>
+    <div class="gallery">
+        <div class="card">
+            <h2>9-Slice Panels</h2>
+            <img class="scale4" src="ui_panel_9slice_default.png">
+            <img class="scale4" src="ui_panel_9slice_alert.png">
+            <img class="scale4" src="ui_panel_9slice_success.png">
+            <img class="scale4" src="ui_panel_9slice_secure.png">
+        </div>
+        <div class="card">
+            <h2>Buttons</h2>
+            <img class="scale2" src="ui_btn_primary.png"><br><br>
+            <img class="scale2" src="ui_btn_danger_ban.png"><br><br>
+            <img class="scale2" src="ui_btn_ghost_forgive.png"><br><br>
+        </div>
+        <div class="card">
+            <h2>Voting Bar</h2>
+            <img class="scale2" src="ui_progress_vote.png">
+        </div>
+        <div class="card">
+            <h2>UI Atlas (Icons & Badges)</h2>
+            <img class="scale4" src="ui_atlas.png">
+        </div>
+    </div>
+</body>
+</html>

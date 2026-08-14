@@ -1,0 +1,47 @@
+{
+    "name": "dusk-village",
+    "version": "1.0.0",
+    "description": "10-Player Social Deduction Game for Media & Information Literacy",
+    "main": "src/server/server.js",
+    "scripts": {
+        "dev:client": "webpack serve --mode development --open",
+        "dev:server": "nodemon src/server/server.js",
+        "dev": "concurrently \"npm run dev:client\" \"npm run dev:server\"",
+        "build": "webpack --mode production",
+        "start": "node src/server/server.js",
+        "generate:sprites": "node scripts/generate_character_sprites.js && node scripts/generate_building_sprites.js && node scripts/generate_terrain_sprites.js && node scripts/generate_props_sprites.js && node scripts/generate_fragment_icons.js && node scripts/generate_ui_sprites.js && node scripts/generate_vfx_sprites.js",
+        "lint": "eslint src/",
+        "test": "jest"
+    },
+    "keywords": [
+        "game",
+        "social-deduction",
+        "phaser3",
+        "MIL",
+        "multiplayer"
+    ],
+    "license": "ISC",
+    "dependencies": {
+        "express": "^5.2.1",
+        "jimp": "^1.6.1",
+        "phaser": "^3.90.0",
+        "pngjs": "^7.0.0",
+        "uuid": "^14.0.1",
+        "ws": "^8.21.2"
+    },
+    "devDependencies": {
+        "@babel/core": "^8.0.1",
+        "@babel/preset-env": "^8.0.2",
+        "babel-loader": "^10.1.1",
+        "concurrently": "^10.0.4",
+        "copy-webpack-plugin": "^14.0.0",
+        "eslint": "^10.8.0",
+        "html-webpack-plugin": "^5.6.8",
+        "jest": "^30.4.2",
+        "nodemon": "^3.1.14",
+        "prettier": "^3.9.6",
+        "webpack": "^5.109.2",
+        "webpack-cli": "^7.2.2",
+        "webpack-dev-server": "^6.0.0"
+    }
+}

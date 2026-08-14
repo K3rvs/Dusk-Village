@@ -1,0 +1,145 @@
+import { COLORS } from '../utils/Constants.js';
+import { gameEvents } from '../utils/EventBus.js';
+
+export class TopBar {
+    constructor(scene) {
+        this.scene = scene;
+        const width = scene.cameras.main.width;
+
+        this.container = scene.add.container(0, 0);
+        this.container.setScrollFactor(0);
+        this.container.setDepth(600);
+
+        // Topbar Backdrop Glass Panel (46px height) - Warm Espresso Walnut Slate
+        this.bg = scene.add.rectangle(width / 2, 23, width, 46, 0x181311, 0.94);
+        this.border = scene.add.rectangle(width / 2, 46, width, 1.5, 0x785338, 0.85);
+        this.glowLine = scene.add.rectangle(width / 2, 46, width * 0.4, 2, 0xD97706, 0.9);
+
+        // 1. Left Phase Pill Badge
+        const phasePillW = 180;
+        const phasePillH = 32;
+        this.phasePillBg = scene.add.rectangle(16 + phasePillW / 2, 23, phasePillW, phasePillH, 0x231E1B, 0.95);
+        this.phasePillBg.setStrokeStyle(1.5, 0xF59E0B, 0.9);
+
+        this.phaseText = scene.add.text(16 + phasePillW / 2, 23, 'DAY PHASE', {
+            fontFamily: 'Dogica, monospace',
+            fontSize: '9px',
+            color: '#F59E0B',
+            letterSpacing: 1
+        }).setOrigin(0.5, 0.5);
+
+        // 2. Center Chronometer Box
+        const timerBoxW = 120;
+        const timerBoxH = 34;
+        this.timerBoxBg = scene.add.rectangle(width / 2, 23, timerBoxW, timerBoxH, 0x231E1B, 0.95);
+        this.timerBoxBg.setStrokeStyle(1.5, 0xF59E0B, 0.9);
+
+        this.timerText = scene.add.text(width / 2, 23, '02:00', {
+            fontFamily: 'DogicaBold, Dogica, monospace',
+            fontSize: '11px',
+            color: '#FDFBF7',
+            letterSpacing: 1
+        }).setOrigin(0.5, 0.5);
+
+        // 3. Right Status Pill (Day Counter)
+        const dayPillW = 110;
+        const dayPillH = 32;
+        this.dayPillBg = scene.add.rectangle(width - 16 - dayPillW / 2, 23, dayPillW, dayPillH, 0x231E1B, 0.95);
+        this.dayPillBg.setStrokeStyle(1.5, 0x785338, 0.9);
+
+        this.dayText = scene.add.text(width - 16 - dayPillW / 2, 23, 'DAY 1', {
+            fontFamily: 'Dogica, monospace',
+            fontSize: '9px',
+            color: '#FDFBF7',
+            letterSpacing: 1
+        }).setOrigin(0.5, 0.5);
+
+        this.container.add([
+            this.bg,
+            this.border,
+            this.glowLine,
+            this.phasePillBg,
+            this.phaseText,
+            this.timerBoxBg,
+            this.timerText,
+            this.dayPillBg,
+            this.dayText
+        ]);
+
+        this.setupEventListeners();
+    }
+
+    onResize(width, height) {
+        this.bg.setPosition(width / 2, 23).setSize(width, 46);
+        this.border.setPosition(width / 2, 46).setSize(width, 1.5);
+        this.glowLine.setPosition(width / 2, 46).setSize(width * 0.4, 2);
+
+        this.timerBoxBg.setPosition(width / 2, 23);
+        this.timerText.setPosition(width / 2, 23);
+
+        const dayPillW = 110;
+        this.dayPillBg.setPosition(width - 16 - dayPillW / 2, 23);
+        this.dayText.setPosition(width - 16 - dayPillW / 2, 23);
+    }
+
+    setupEventListeners() {
+        gameEvents.on('phase:changed', (data) => {
+            const phaseRaw = data.to ? String(data.to).toUpperCase() : 'DAY_PHASE';
+            let color = '#F59E0B';
+            let strokeColor = 0xF59E0B;
+
+            if (phaseRaw.includes('NIGHT')) {
+                color = '#A855F7';
+                strokeColor = 0xA855F7;
+            } else if (phaseRaw.includes('JUDGEMENT') || phaseRaw.includes('JUDGMENT')) {
+                color = '#EF4444';
+                strokeColor = 0xEF4444;
+            } else if (phaseRaw.includes('INITIATION')) {
+                color = '#22C55E';
+                strokeColor = 0x22C55E;
+            }
+
+            this.phaseText.setText(phaseRaw.replace(/_/g, ' '));
+            this.phaseText.setColor(color);
+            this.phasePillBg.setStrokeStyle(1.5, strokeColor, 0.9);
+            this.glowLine.setFillStyle(strokeColor, 0.9);
+        });
+
+        gameEvents.on('phase:timerTick', (data) => {
+            this.timerText.setText(data.displayString || '00:00');
+            const rem = data.remaining || 0;
+
+            if (rem <= 10) {
+                this.timerText.setColor('#EF4444');
+                this.timerBoxBg.setStrokeStyle(2, 0xEF4444, 1);
+                // Pulse animation
+                if (!this.pulseTween || !this.pulseTween.isPlaying()) {
+                    this.pulseTween = this.scene.tweens.add({
+                        targets: [this.timerBoxBg, this.timerText],
+                        scaleX: 1.05,
+                        scaleY: 1.05,
+                        yoyo: true,
+                        duration: 300,
+                        repeat: 0
+                    });
+                }
+            } else if (rem <= 30) {
+                this.timerText.setColor('#F59E0B');
+                this.timerBoxBg.setStrokeStyle(1.5, 0xF59E0B, 0.9);
+            } else {
+                this.timerText.setColor('#FDFBF7');
+                this.timerBoxBg.setStrokeStyle(1.5, 0x785338, 0.9);
+            }
+        });
+
+        gameEvents.on('game:dayChanged', (data) => {
+            if (data && data.day) {
+                this.dayText.setText(`DAY ${data.day}`);
+            }
+        });
+    }
+
+    destroy() {
+        this.container.destroy();
+    }
+}
