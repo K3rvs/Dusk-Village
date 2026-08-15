@@ -24,51 +24,10 @@ export default class GameScene extends Phaser.Scene {
     }
 
     create() {
-        // === 1. LOAD TILEMAP ===
-        let mapLoaded = false;
-        try {
-            if (this.cache.tilemap.has('map_village_exterior')) {
-                this.map = this.make.tilemap({ key: 'map_village_exterior' });
-
-                const grassTiles = this.map.addTilesetImage('tile_ground_grass', 'tile_ground_grass');
-                const dirtTiles = this.map.addTilesetImage('tile_ground_dirt', 'tile_ground_dirt');
-                const cobbleTiles = this.map.addTilesetImage('tile_ground_cobble', 'tile_ground_cobble');
-                const stoneTiles = this.map.addTilesetImage('tile_ground_stone', 'tile_ground_stone');
-                const treeTiles = this.map.addTilesetImage('tileset_terrain_trees', 'tileset_terrain_trees');
-                
-                const allTilesets = [grassTiles, dirtTiles, cobbleTiles, stoneTiles, treeTiles].filter(Boolean);
-
-                if (allTilesets.length > 0) {
-                    const layerNames = this.map.layers.map(l => l.name);
-                    
-                    if (layerNames.includes('ground')) {
-                        this.groundLayer = this.map.createLayer('ground', allTilesets);
-                    }
-                    if (layerNames.includes('trees_canopy')) {
-                        this.treeCanopyLayer = this.map.createLayer('trees_canopy', allTilesets);
-                        this.treeCanopyLayer.setDepth(100);
-                    }
-                    
-                    mapLoaded = true;
-                    this.spawnBuildings();
-                    this.spawnTreesAndDecorations();
-                }
-            }
-        } catch (e) {
-            console.warn('Tilemap initialization notice:', e.message);
-        }
-
-        // Fallback ground rendering if tilemap is missing
-        if (!mapLoaded) {
-            this.add.rectangle(480, 360, 960, 720, 0x4A7C3F).setDepth(0);
-            const graphics = this.add.graphics();
-            graphics.lineStyle(1, 0x3D6B33, 0.3);
-            for (let x = 0; x <= 960; x += 16) graphics.lineBetween(x, 0, x, 720);
-            for (let y = 0; y <= 720; y += 16) graphics.lineBetween(0, y, 960, y);
-            graphics.setDepth(1);
-            this.spawnBuildings();
-            this.spawnTreesAndDecorations();
-        }
+        // === 1. RENDER GROUND TILES (1:1 with Map Layout) ===
+        this.createGroundLayer();
+        this.spawnBuildings();
+        this.spawnTreesAndDecorations();
 
         // === 1b. CREATE TILE-BASED SOLID COLLISION GRID (1:1 with Map Editor) ===
         this.createCollisionLayer();
@@ -181,6 +140,43 @@ export default class GameScene extends Phaser.Scene {
             teammates: this.instigatorTeammates,
             mystery: this.currentMystery
         });
+    }
+
+    createGroundLayer() {
+        const tileSize = 16;
+        const cols = villageLayout.width || 94;
+        const rows = villageLayout.height || 70;
+        const worldW = cols * tileSize; // 1504
+        const worldH = rows * tileSize; // 1120
+        const groundData = villageLayout.groundData;
+
+        // 1. Base Rich Grass TileSprite Layer (Depth 0)
+        if (this.textures.exists('tile_ground_grass')) {
+            this.add.tileSprite(worldW / 2, worldH / 2, worldW, worldH, 'tile_ground_grass').setDepth(0);
+        } else {
+            this.add.rectangle(worldW / 2, worldH / 2, worldW, worldH, 0x38972C).setDepth(0);
+        }
+
+        // 2. High-Performance Ground Texture (Dirt, Cobblestone Plaza, Stone Borders)
+        if (groundData && Array.isArray(groundData)) {
+            const rt = this.add.renderTexture(0, 0, worldW, worldH).setOrigin(0, 0).setDepth(1);
+            
+            for (let y = 0; y < rows; y++) {
+                for (let x = 0; x < cols; x++) {
+                    const tile = groundData[y * cols + x];
+                    let textureKey = null;
+
+                    if (tile === 2) textureKey = 'tile_ground_dirt';
+                    else if (tile === 3) textureKey = 'tile_ground_cobble';
+                    else if (tile === 19) textureKey = 'tile_ground_stone';
+                    else if (tile === 4) textureKey = 'tile_ground_cobble'; // Water / Stream
+
+                    if (textureKey && this.textures.exists(textureKey)) {
+                        rt.draw(textureKey, x * tileSize, y * tileSize);
+                    }
+                }
+            }
+        }
     }
 
     createCollisionLayer() {
