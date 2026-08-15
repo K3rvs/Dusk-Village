@@ -174,6 +174,36 @@ export default class InteriorScene extends Phaser.Scene {
         }
     }
 
+    setupInitiationOverlay() {
+        const uiScene = this.scene.get('UIScene');
+        if (uiScene && typeof uiScene.showInitiationModal === 'function') {
+            uiScene.showInitiationModal(this.role);
+        }
+
+        this.time.delayedCall(10000, () => {
+            this.isLockedForInitiation = false;
+        });
+
+        // Unlock and exit building when returning to Exterior (Day Phase / Judgement Phase)
+        gameEvents.on('phase:serverChanged', (data) => {
+            if (data.phase === 'DAY_PHASE' || data.phase === 'JUDGEMENT_PHASE') {
+                this.isLockedForInitiation = false;
+                this.isLockedForNight = false;
+                this.exitBuilding();
+            } else if (data.phase === 'NIGHT_PHASE') {
+                if (this.role === 'SURVIVOR') {
+                    this.isLockedForNight = true;
+                }
+            }
+        });
+        
+        gameEvents.on('interior:lockForNight', () => {
+            if (this.role === 'SURVIVOR') {
+                this.isLockedForNight = true;
+            }
+        });
+    }
+
     setupInteractablesFromLayout(layoutData, rx, ry, rw, rh, cols, rows) {
         this.stations = [];
         const structures = (layoutData && layoutData.structures) ? layoutData.structures : [];
