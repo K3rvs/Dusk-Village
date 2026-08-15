@@ -21,6 +21,38 @@ export default class InteriorScene extends Phaser.Scene {
         this.isLockedForNight = this.isNightPhase && this.role === 'SURVIVOR';
     }
 
+    getLayoutData() {
+        const bTypeUpper = this.buildingType.toUpperCase();
+        let key = 'layout_interior_house';
+        if (bTypeUpper === 'VILLAGE_HALL' || bTypeUpper === 'VILLAGEHALL') key = 'layout_interior_villagehall';
+        else if (bTypeUpper === 'LIBRARY' || bTypeUpper === 'ARCHIVES') key = 'layout_interior_library';
+        else if (bTypeUpper === 'CLINIC') key = 'layout_interior_clinic';
+        else if (bTypeUpper === 'SCHOOL') key = 'layout_interior_school';
+        else if (bTypeUpper === 'LOCAL_HOUSE') key = 'layout_interior_local_house';
+        
+        if (this.cache.json.has(key)) {
+            return this.cache.json.get(key);
+        }
+        return null;
+    }
+
+    getPropTextureKey(key) {
+        if (this.textures.exists(key)) return key;
+        const aliases = {
+            'vh_podium': 'prop_podium',
+            'vh_long_table': 'prop_hall_table',
+            'vh_council_table': 'prop_submit_table',
+            'vh_record_cabinet': 'prop_student_locker',
+            'vh_records_box': 'prop_small_bookshelf',
+            'vh_chair': 'prop_living_chair',
+            'vh_wall_banner': 'prop_chalk_board',
+            'vh_sideboard': 'prop_clinic_cab_wd',
+            'vh_chandelier': 'prop_submit_table'
+        };
+        if (aliases[key] && this.textures.exists(aliases[key])) return aliases[key];
+        return null;
+    }
+
     create() {
         // Ensure any floating prompts from the exterior world are hidden
         const ui = this.scene.get('UIScene');
@@ -28,30 +60,33 @@ export default class InteriorScene extends Phaser.Scene {
 
         // Set camera background to solid black
         this.cameras.main.setBackgroundColor('#000000');
-
-        // Fullscreen solid black backdrop to prevent any underlying scene pixels
         this.add.rectangle(0, 0, 4000, 4000, 0x000000).setDepth(-100);
 
-        // Calculate exact world center based on scale
-        const scale = 2.0;
+        const bTypeUpper = this.buildingType.toUpperCase();
+        const layoutData = this.getLayoutData();
+
+        // Read dimensions from layout JSON
+        const cols = (layoutData && layoutData.width) ? layoutData.width : 23;
+        const rows = (layoutData && layoutData.height) ? layoutData.height : 15;
+        const roomW = cols * 16;
+        const roomH = rows * 16;
+
+        // Dynamic scale & centering
+        const scale = Math.min(2.0, Math.min(this.scale.width / (roomW + 48), this.scale.height / (roomH + 48)));
         const camW = this.scale.width / scale;
         const camH = this.scale.height / scale;
 
         const centerX = camW / 2;
         const centerY = camH / 2;
-
-        // Interior Room Size: 50% Expanded (23x15 tiles = 368x240px)
-        const roomW = 368;
-        const roomH = 240;
         const roomX = centerX - roomW / 2;
         const roomY = centerY - roomH / 2;
 
         // Floor Color Theme
-        const bTypeUpper = this.buildingType.toUpperCase();
         let floorColor = 0x4A2E1B; // Warm Timber
         if (bTypeUpper === 'LIBRARY') floorColor = 0x1E293B;
         else if (bTypeUpper === 'CLINIC') floorColor = 0x334155;
         else if (bTypeUpper === 'VILLAGE_HALL') floorColor = 0x582C12;
+        else if (bTypeUpper === 'SCHOOL') floorColor = 0x5C3B1E;
 
         // Centered Floor Rectangle
         const floor = this.add.rectangle(centerX, centerY, roomW, roomH, floorColor);
@@ -62,10 +97,8 @@ export default class InteriorScene extends Phaser.Scene {
         wallGraphics.lineStyle(6, 0x0F172A);
         wallGraphics.strokeRect(roomX + 3, roomY + 3, roomW - 6, roomH - 6);
 
-        // Formatted Title (e.g. HOUSE H01, CLINIC, LIBRARY)
+        // Formatted Title banner
         const formattedTitle = this.buildingId ? String(this.buildingId).replace(/_/g, ' ') : bTypeUpper;
-        
-        // Trigger high-res HUD toast banner
         gameEvents.emit('hud:announcement', { text: `📍 Entering ${formattedTitle}`, color: '#F59E0B' });
 
         // Physics World Collision Bounds
@@ -73,7 +106,7 @@ export default class InteriorScene extends Phaser.Scene {
 
         // Spawn Player Sprite (Bottom Center of room)
         const spawnX = centerX;
-        const spawnY = roomY + roomH - 30;
+        const spawnY = roomY + roomH - 24;
 
         const avatarId = this.localPlayer.avatarId || '01';
         const spriteKey = `spr_avatar_${avatarId}`;
@@ -85,9 +118,9 @@ export default class InteriorScene extends Phaser.Scene {
         }
 
         this.playerSprite.setCollideWorldBounds(true);
-        this.playerSprite.setDepth(50);
+        this.playerSprite.setDepth(500);
 
-        // Camera setup: Center camera perfectly on (centerX, centerY)
+        // Camera setup
         this.cameras.main.setZoom(scale);
         this.cameras.main.centerOn(centerX, centerY);
 
@@ -101,24 +134,39 @@ export default class InteriorScene extends Phaser.Scene {
         };
         this.interactKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.E);
 
-        // Decorative Area Rug
-        let rugColor = 0x6B4324;
-        let rugBorder = 0x8C5B34;
-        if (bTypeUpper === 'LIBRARY' || bTypeUpper === 'ARCHIVES') { rugColor = 0x1E2E4A; rugBorder = 0x2E456B; }
-        else if (bTypeUpper === 'CLINIC') { rugColor = 0x15380A; rugBorder = 0x274E13; }
-        else if (bTypeUpper === 'VILLAGE_HALL') { rugColor = 0x7D1212; rugBorder = 0xA82424; }
-        else if (bTypeUpper === 'SCHOOL') { rugColor = 0x8C5E1A; rugBorder = 0xC4801D; }
+        // Solid Colliders Group
+        this.solidColliders = this.physics.add.staticGroup();
 
-        const rug = this.add.rectangle(centerX, centerY + 5, 120, 70, rugColor);
-        rug.setStrokeStyle(1.5, rugBorder);
-        rug.setDepth(2);
+        // Create Solid Collision Grid from layout JSON
+        if (layoutData && Array.isArray(layoutData.collisionData)) {
+            const cData = layoutData.collisionData;
+            for (let y = 0; y < rows; y++) {
+                let startX = null;
+                for (let x = 0; x <= cols; x++) {
+                    const isSolid = x < cols && cData[y * cols + x] === 1;
+                    if (isSolid && startX === null) {
+                        startX = x;
+                    } else if (!isSolid && startX !== null) {
+                        const count = x - startX;
+                        const w = count * 16;
+                        const h = 16;
+                        const cx = roomX + startX * 16 + w / 2;
+                        const cy = roomY + y * 16 + h / 2;
+                        
+                        const rect = this.add.rectangle(cx, cy, w, h, 0x000000, 0);
+                        this.physics.add.existing(rect, true);
+                        this.solidColliders.add(rect);
+                        startX = null;
+                    }
+                }
+            }
+            this.physics.add.collider(this.playerSprite, this.solidColliders);
+        }
 
-        // Spawn interior stations and exit door
-        this.setupInteractables(roomX, roomY, roomW);
+        // Spawn Interior Structures & Stations from Layout
+        this.setupInteractablesFromLayout(layoutData, roomX, roomY, roomW, roomH, cols, rows);
         this.renderInteriorFragments(roomX, roomY, roomW);
         this.setupExitDoor(centerX, roomY + roomH - 8);
-
-
 
         // Initiation Phase setup if starting inside house
         if (this.isInitiation) {
@@ -126,86 +174,41 @@ export default class InteriorScene extends Phaser.Scene {
         }
     }
 
-    setupInitiationOverlay() {
-        const uiScene = this.scene.get('UIScene');
-        if (uiScene && typeof uiScene.showInitiationModal === 'function') {
-            uiScene.showInitiationModal(this.role);
-        }
-
-        this.time.delayedCall(10000, () => {
-            this.isLockedForInitiation = false;
-        });
-
-        // Unlock and exit building when returning to Exterior (Day Phase / Judgement Phase)
-        gameEvents.on('phase:serverChanged', (data) => {
-            if (data.phase === 'DAY_PHASE' || data.phase === 'JUDGEMENT_PHASE') {
-                this.isLockedForInitiation = false;
-                this.isLockedForNight = false;
-                this.exitBuilding();
-            } else if (data.phase === 'NIGHT_PHASE') {
-                if (this.role === 'SURVIVOR') {
-                    this.isLockedForNight = true;
-                }
-            }
-        });
-        
-        gameEvents.on('interior:lockForNight', () => {
-            if (this.role === 'SURVIVOR') {
-                this.isLockedForNight = true;
-            }
-        });
-    }
-
-    setupInteractables(rx, ry, rw) {
+    setupInteractablesFromLayout(layoutData, rx, ry, rw, rh, cols, rows) {
         this.stations = [];
+        const structures = (layoutData && layoutData.structures) ? layoutData.structures : [];
         const bType = this.buildingType.toUpperCase();
-        
-        if (bType === 'VILLAGE_HALL') {
-            // Main Council Table / Village Archive Desk
-            this.createStation('Village Archive (DELIVER CLUE)', rx + rw / 2, ry + 75, 64, 24, 'interior_props', 'prop_council_table', 'DELIVER_FRAGMENT');
-            // Lectern & Cabinets
-            this.createPropDecor(rx + rw - 45, ry + 70, 'interior_props', 'prop_lectern');
-            this.createPropDecor(rx + 45, ry + 28, 'interior_props', 'prop_filing_cabinet');
-            this.createPropDecor(rx + rw - 45, ry + 28, 'interior_props', 'prop_filing_cabinet');
-            // Archived Claims
-            this.createStation('Archived Claims', rx + 45, ry + 70, 32, 32, 'outdoor_props', 'prop_barrels_crates');
-            // Executive Notice Board
-            this.createPropDecor(rx + 25, ry + 30, 'outdoor_props', 'prop_notice_board');
-        } else if (bType === 'ARCHIVES' || bType === 'LIBRARY') {
-            // Verification Podium (Central Interactive Station)
-            this.podiumStation = this.createStation('VERIFICATION PODIUM (E)', rx + rw / 2, ry + 70, 48, 32, 'interior_props', 'prop_verify_podium', 'VERIFY_PODIUM');
-            // Source Database & Bookshelves
-            this.createStation('Source Database', rx + 45, ry + 70, 32, 32, 'interior_props', 'prop_db_terminal');
-            this.createStation('Public Records', rx + rw - 45, ry + 65, 48, 48, 'interior_props', 'prop_bookshelf');
-            this.createPropDecor(rx + 45, ry + 28, 'interior_props', 'prop_bookshelf');
-        } else if (bType === 'SCHOOL') {
-            // Chalkboard on Top Wall
-            this.createPropDecor(rx + rw / 2, ry + 24, 'interior_props', 'prop_chalkboard');
-            // Counselor Log Desk
-            this.createStation('Counselor Log Desk', rx + rw / 2, ry + 55, 32, 32, 'interior_props', 'prop_lectern');
-            // Student Desks (Classroom Rows)
-            this.createPropDecor(rx + 60, ry + 95, 'interior_props', 'prop_school_desk');
-            this.createPropDecor(rx + 95, ry + 95, 'interior_props', 'prop_school_desk');
-            this.createPropDecor(rx + 145, ry + 95, 'interior_props', 'prop_school_desk');
-            this.createPropDecor(rx + 180, ry + 95, 'interior_props', 'prop_school_desk');
-            // Student Notice Board
-            this.createStation('Student Notice Board', rx + 45, ry + 50, 32, 32, 'outdoor_props', 'prop_notice_board');
-        } else if (bType === 'CLINIC') {
-            // Intake Desk & Pharmacy Medicine Cabinet
-            this.createStation('Medical Intake Desk', rx + rw / 2 - 30, ry + 60, 32, 32, 'interior_props', 'prop_lectern');
-            this.createStation('Pharmacy Shelf', rx + rw - 45, ry + 40, 32, 32, 'interior_props', 'prop_medicine_cabinet');
-            // Exam Table
-        } else if (bType === 'LOCAL_HOUSE') {
-            // Unoccupied Local House (Investigation Site)
-            this.createStation('Old Bureau', rx + rw - 45, ry + 45, 32, 32, 'interior_props', 'prop_db_terminal');
-            this.createStation('Unmade Bed', rx + 45, ry + 45, 32, 24, 'interior_props', 'prop_cottage_bed');
-            this.createStation('Floorboard Cache', rx + rw / 2, ry + 70, 24, 24, null, null, 'INSPECT');
-            this.createPropDecor(rx + 45, ry + 105, 'outdoor_props', 'prop_barrels_crates');
-        } else {
-            // Player Cottages H01-H10
-            this.createStation('Bed', rx + 45, ry + 45, 32, 24, 'interior_props', 'prop_cottage_bed');
-            this.createStation('Study Desk', rx + rw - 45, ry + 45, 32, 32, 'interior_props', 'prop_db_terminal');
-            this.createPropDecor(rx + 45, ry + 105, 'outdoor_props', 'prop_barrels_crates');
+
+        // Spawn all placed structures from layout JSON
+        structures.forEach(s => {
+            const propW = s.w || 1;
+            const propH = s.h || 1;
+            const px = rx + (s.x + propW / 2) * 16;
+            const py = ry + (s.y + propH) * 16;
+
+            const tex = this.getPropTextureKey(s.key);
+            if (tex) {
+                const img = this.add.image(px, py, tex);
+                img.setOrigin(0.5, 1.0);
+                img.setDepth(py);
+                img.setDisplaySize(propW * 16, propH * 16);
+            }
+
+            // Register Interactive Stations based on prop keys
+            if (s.key === 'prop_submit_table' || s.key === 'vh_council_table' || s.key === 'vh_long_table') {
+                this.createStation('Village Archive (DELIVER CLUE)', px, py - (propH * 16) / 2, propW * 16, propH * 16, null, null, 'DELIVER_FRAGMENT');
+            } else if (s.key === 'prop_podium_frag' || s.key === 'vh_podium' || s.key === 'prop_podium') {
+                this.createStation('VERIFICATION PODIUM (E)', px, py - (propH * 16) / 2, propW * 16, propH * 16, null, null, 'VERIFY_PODIUM');
+            } else if (s.key === 'prop_db_terminal' || s.key === 'vh_record_cabinet') {
+                this.createStation('Archived Records', px, py - (propH * 16) / 2, propW * 16, propH * 16, null, null, 'INSPECT');
+            }
+        });
+
+        // Ensure primary stations exist if not placed
+        if (bType === 'VILLAGE_HALL' && !this.stations.some(st => st.action === 'DELIVER_FRAGMENT')) {
+            this.createStation('Village Archive (DELIVER CLUE)', rx + rw / 2, ry + rh / 2, 64, 32, null, null, 'DELIVER_FRAGMENT');
+        } else if ((bType === 'LIBRARY' || bType === 'ARCHIVES') && !this.stations.some(st => st.action === 'VERIFY_PODIUM')) {
+            this.createStation('VERIFICATION PODIUM (E)', rx + rw / 2, ry + rh / 2, 48, 32, null, null, 'VERIFY_PODIUM');
         }
 
         this.interactKey.on('down', () => {
@@ -243,22 +246,7 @@ export default class InteriorScene extends Phaser.Scene {
     }
 
     createStation(name, x, y, w, h, texKey = null, frameName = null, action = 'INSPECT') {
-        let visualObj;
-        if (texKey && frameName && this.textures.exists(texKey)) {
-            visualObj = this.add.image(x, y, texKey, frameName);
-            visualObj.setDepth(y);
-            this.physics.add.existing(visualObj, true);
-            this.physics.add.collider(this.playerSprite, visualObj);
-        } else {
-            const rect = this.add.rectangle(x, y, w, h, 0x8B4513);
-            rect.setStrokeStyle(1.5, 0x0F172A);
-            rect.setDepth(y);
-            this.physics.add.existing(rect, true);
-            this.physics.add.collider(this.playerSprite, rect);
-            visualObj = rect;
-        }
-
-        const zone = this.add.zone(x, y, w + 20, h + 20);
+        const zone = this.add.zone(x, y, w + 24, h + 24);
         this.physics.add.existing(zone, true);
 
         const stationObj = { name, zone, action };

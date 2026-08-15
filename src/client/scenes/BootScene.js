@@ -109,6 +109,53 @@ export default class BootScene extends Phaser.Scene {
         this.load.image('mkt_sign', 'assets/sprites/props/marketplace/sign post.png');
         this.load.image('mkt_flower_bed', 'assets/sprites/props/marketplace/flower bed.png');
 
+        // --- Standalone & Interior Marketplace Props ---
+        this.load.image('prop_bed', 'assets/sprites/props/marketplace/bed.png');
+        this.load.image('prop_bedside', 'assets/sprites/props/marketplace/bedside table.png');
+        this.load.image('prop_book_cart', 'assets/sprites/props/marketplace/book cart.png');
+        this.load.image('prop_carpet', 'assets/sprites/props/marketplace/carpet.png');
+        this.load.image('prop_chalk_board', 'assets/sprites/props/marketplace/chalk board.png');
+        this.load.image('prop_clinic_bed', 'assets/sprites/props/marketplace/clinic bed.png');
+        this.load.image('prop_clinic_cab_wd', 'assets/sprites/props/marketplace/clinic cabinet wood.png');
+        this.load.image('prop_clinic_cab', 'assets/sprites/props/marketplace/clinic cabinet.png');
+        this.load.image('prop_clinic_desk_2', 'assets/sprites/props/marketplace/clinic desk 2.png');
+        this.load.image('prop_clinic_desk', 'assets/sprites/props/marketplace/clinic desk.png');
+        this.load.image('prop_clinic_mach', 'assets/sprites/props/marketplace/clinic machine.png');
+        this.load.image('prop_clinic_sofa', 'assets/sprites/props/marketplace/clinic sofa.png');
+        this.load.image('prop_comfy_chair', 'assets/sprites/props/marketplace/comfy chair.png');
+        this.load.image('prop_dining_table', 'assets/sprites/props/marketplace/dining table.png');
+        this.load.image('prop_fireplace', 'assets/sprites/props/marketplace/fireplace.png');
+        this.load.image('prop_flower_bed', 'assets/sprites/props/marketplace/flower bed.png');
+        this.load.image('prop_hall_table', 'assets/sprites/props/marketplace/hall table.png');
+        this.load.image('prop_large_bookshelf', 'assets/sprites/props/marketplace/large bookshelf.png');
+        this.load.image('prop_library_desk', 'assets/sprites/props/marketplace/library desk.png');
+        this.load.image('prop_library_round_desk', 'assets/sprites/props/marketplace/library round desk.png');
+        this.load.image('prop_living_chair', 'assets/sprites/props/marketplace/living chair.png');
+        this.load.image('prop_living_desk', 'assets/sprites/props/marketplace/living desk.png');
+        this.load.image('prop_medium_bookshelf', 'assets/sprites/props/marketplace/medium bookshelf.png');
+        this.load.image('prop_podium_frag', 'assets/sprites/props/marketplace/podium for fragment checking.png');
+        this.load.image('prop_podium', 'assets/sprites/props/marketplace/podium.png');
+        this.load.image('prop_printer', 'assets/sprites/props/marketplace/printer.png');
+        this.load.image('prop_school_bookshelf', 'assets/sprites/props/marketplace/school book shelf.png');
+        this.load.image('prop_science_table', 'assets/sprites/props/marketplace/science table.png');
+        this.load.image('prop_small_bookshelf', 'assets/sprites/props/marketplace/small bookshelf.png');
+        this.load.image('prop_small_table', 'assets/sprites/props/marketplace/small table.png');
+        this.load.image('prop_sofa_chair', 'assets/sprites/props/marketplace/sofa chair.png');
+        this.load.image('prop_sofa', 'assets/sprites/props/marketplace/sofa.png');
+        this.load.image('prop_student_locker', 'assets/sprites/props/marketplace/student locker.png');
+        this.load.image('prop_students_table', 'assets/sprites/props/marketplace/students table.png');
+        this.load.image('prop_submit_table', 'assets/sprites/props/marketplace/table where you will submit the fragments.png');
+        this.load.image('prop_teacher_table', 'assets/sprites/props/marketplace/teacher table.png');
+        this.load.image('prop_tv_set', 'assets/sprites/props/marketplace/tv set.png');
+
+        // --- Interior Tilemap JSON Layouts ---
+        this.load.json('layout_interior_villagehall', 'interior_villagehall.json');
+        this.load.json('layout_interior_library', 'interior_library.json');
+        this.load.json('layout_interior_clinic', 'interior_clinic.json');
+        this.load.json('layout_interior_school', 'interior_school.json');
+        this.load.json('layout_interior_local_house', 'interior_local_house.json');
+        this.load.json('layout_interior_house', 'interior_house.json');
+
 
         // --- Icons ---
         this.load.spritesheet('memory_fragments', 'assets/sprites/icons/memory_fragments.png', {
