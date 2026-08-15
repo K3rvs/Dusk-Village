@@ -59,12 +59,14 @@ export class PlayerController {
      */
     dropFragment() {
         if (!this.player || !this.player.sprite) return;
+        const dropPos = {
+            x: Math.round(this.player.sprite.x / 16) * 16,
+            y: Math.round(this.player.sprite.y / 16) * 16
+        };
         gameEvents.emit('fragment:attemptDrop', {
             playerId: this.player.id,
-            position: {
-                x: this.player.sprite.x,
-                y: this.player.sprite.y
-            }
+            position: dropPos,
+            location: 'EXTERIOR'
         });
     }
 

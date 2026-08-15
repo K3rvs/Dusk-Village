@@ -142,7 +142,7 @@ wss.on('connection', (ws) => {
                 break;
 
             case 'FRAGMENT_DROP':
-                roomManager.handleFragmentDrop(roomCode, playerId, message.position);
+                roomManager.handleFragmentDrop(roomCode, playerId, message.position, message.location);
                 break;
 
             case 'VERIFICATION_COMPLETE':

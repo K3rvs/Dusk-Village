@@ -83,7 +83,25 @@ export class InventoryPanel {
 
         this.slotCard.on('pointerdown', () => {
             if (this.hasFragment) {
-                gameEvents.emit('fragment:attemptDrop', { position: { x: this.scene.cameras.main.width / 2, y: this.scene.cameras.main.height / 2 } });
+                const interior = this.scene.scene.get('InteriorScene');
+                const gameScene = this.scene.scene.get('GameScene');
+                let posX = 768;
+                let posY = 580;
+                let loc = 'EXTERIOR';
+
+                if (interior && interior.scene.isActive() && interior.playerSprite) {
+                    posX = Math.round(interior.playerSprite.x / 16) * 16;
+                    posY = Math.round(interior.playerSprite.y / 16) * 16;
+                    loc = interior.buildingType ? interior.buildingType.toUpperCase() : 'EXTERIOR';
+                } else if (gameScene && gameScene.localPlayer && gameScene.localPlayer.sprite) {
+                    posX = Math.round(gameScene.localPlayer.sprite.x / 16) * 16;
+                    posY = Math.round(gameScene.localPlayer.sprite.y / 16) * 16;
+                }
+
+                gameEvents.emit('fragment:attemptDrop', {
+                    position: { x: posX, y: posY },
+                    location: loc
+                });
             }
         });
 

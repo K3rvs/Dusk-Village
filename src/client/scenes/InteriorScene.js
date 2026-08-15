@@ -138,6 +138,23 @@ export default class InteriorScene extends Phaser.Scene {
             right: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D)
         };
         this.interactKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.E);
+        this.dropKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.Q);
+
+        this.dropKey.on('down', () => {
+            if (this.playerSprite) {
+                const gameScene = this.scene.get('GameScene');
+                const localId = this.playerId || (gameScene ? gameScene.localPlayerId : 'local');
+                const dropPos = {
+                    x: Math.round(this.playerSprite.x / 16) * 16,
+                    y: Math.round(this.playerSprite.y / 16) * 16
+                };
+                gameEvents.emit('fragment:attemptDrop', {
+                    playerId: localId,
+                    position: dropPos,
+                    location: this.buildingType.toUpperCase()
+                });
+            }
+        });
 
         // Solid Colliders Group
         this.solidColliders = this.physics.add.staticGroup();
@@ -317,6 +334,52 @@ export default class InteriorScene extends Phaser.Scene {
         const bType = this.buildingType.toUpperCase();
         const bId = (this.buildingId || '').toUpperCase();
 
+        const spawnInteriorFragSprite = (frag, fx, fy) => {
+            // Golden glow aura
+            const glow = this.add.circle(fx, fy + 4, 8, 0xF59E0B, 0.45);
+            glow.setDepth(fy - 1);
+            this.tweens.add({
+                targets: glow,
+                scaleX: 1.3,
+                scaleY: 1.3,
+                alpha: 0.15,
+                yoyo: true,
+                repeat: -1,
+                duration: 1000,
+                ease: 'Sine.easeInOut'
+            });
+
+            // World Sprite
+            const sprite = this.add.sprite(fx, fy, 'spr_frag_world_pulse');
+            if (this.anims.exists('frag_world_pulse')) {
+                sprite.play('frag_world_pulse');
+            }
+            sprite.setDepth(fy);
+
+            // Bob tween
+            this.tweens.add({
+                targets: sprite,
+                y: fy - 3,
+                yoyo: true,
+                repeat: -1,
+                duration: 900,
+                ease: 'Sine.easeInOut'
+            });
+
+            // Interaction zone
+            const zone = this.add.zone(fx, fy, 32, 32);
+            this.physics.add.existing(zone, true);
+
+            this.interiorFragments.push({
+                id: frag.id,
+                title: frag.title,
+                fragmentType: frag.fragmentType,
+                sprite,
+                glow,
+                interactionZone: zone
+            });
+        };
+
         allFrags.forEach(frag => {
             const loc = (frag.location || '').toUpperCase();
 
@@ -329,30 +392,13 @@ export default class InteriorScene extends Phaser.Scene {
                 (loc === 'SCHOOL' && bType === 'SCHOOL') ||
                 (loc === 'CLINIC' && bType === 'CLINIC');
 
-            if (matchesBuilding) {
+            if (matchesBuilding && !frag.isPickedUp) {
                 // Use spawnTile if available (interior fragments), else center of room
                 const spawnTile = frag.spawnTile || { x: 4, y: 4 };
                 const fx = rx + (spawnTile.x || 4) * 16;
                 const fy = ry + (spawnTile.y || 4) * 16;
 
-                // Create sprite
-                const sprite = this.add.sprite(fx, fy, 'spr_frag_world_pulse');
-                if (this.anims.exists('frag_world_pulse')) {
-                    sprite.play('frag_world_pulse');
-                }
-                sprite.setDepth(fy);
-
-                // Interaction zone
-                const zone = this.add.zone(fx, fy, 28, 28);
-                this.physics.add.existing(zone, true);
-
-                this.interiorFragments.push({
-                    id: frag.id,
-                    title: frag.title,
-                    fragmentType: frag.fragmentType,
-                    sprite,
-                    interactionZone: zone
-                });
+                spawnInteriorFragSprite(frag, fx, fy);
             }
         });
 
@@ -361,6 +407,7 @@ export default class InteriorScene extends Phaser.Scene {
             const index = this.interiorFragments.findIndex(f => f.id === data.fragmentId);
             if (index !== -1) {
                 const f = this.interiorFragments[index];
+                if (f.glow) f.glow.destroy();
                 f.sprite.destroy();
                 f.interactionZone.destroy();
                 this.interiorFragments.splice(index, 1);
@@ -368,6 +415,16 @@ export default class InteriorScene extends Phaser.Scene {
                 // Hide prompt if we just picked it up
                 const ui = this.scene.get('UIScene');
                 if (ui && ui.hideInteractionPrompt) ui.hideInteractionPrompt();
+            }
+        });
+
+        // Listen for dropped fragment inside this building
+        gameEvents.on('fragment:droppedConfirmed', (data) => {
+            const dropLoc = (data.location || '').toUpperCase();
+            if (dropLoc === bType || (dropLoc === 'HOUSE' && bType === 'HOUSE')) {
+                const pos = data.position || { x: rx + 64, y: ry + 64 };
+                const fragObj = data.fragment || { id: data.fragmentId, title: 'Document', fragmentType: 'CLUE' };
+                spawnInteriorFragSprite(fragObj, pos.x, pos.y);
             }
         });
     }

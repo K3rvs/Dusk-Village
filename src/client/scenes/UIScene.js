@@ -134,6 +134,226 @@ export default class UIScene extends Phaser.Scene {
         });
     }
 
+    showFragmentAcquiredModal(fragment) {
+        if (this.activeModal) this.activeModal.destroy();
+
+        const { width, height } = this.cameras.main;
+        const centerX = width / 2;
+        const centerY = height / 2;
+
+        const modalW = 380;
+        const modalH = 160;
+
+        const container = this.add.container(centerX, centerY).setDepth(2600);
+        this.activeModal = container;
+
+        const modalBg = this.add.rectangle(0, 0, modalW, modalH, 0x140F14, 0.98);
+        modalBg.setStrokeStyle(1.8, 0xF59E0B, 0.95);
+
+        const badgeBg = this.add.rectangle(0, -modalH / 2 + 22, 220, 20, 0x2A1B0E, 0.95);
+        badgeBg.setStrokeStyle(1.2, 0xF59E0B, 0.8);
+
+        const badgeText = this.add.text(0, -modalH / 2 + 22, '📄 UNVERIFIED DOCUMENT', {
+            fontFamily: 'DogicaBold, Dogica, monospace',
+            fontSize: '7.5px',
+            color: '#F59E0B',
+            letterSpacing: 0.5
+        }).setOrigin(0.5);
+
+        const fragName = (fragment.objectName || fragment.title || 'A Mysterious Document').toUpperCase();
+        const nameText = this.add.text(0, -10, fragName, {
+            fontFamily: 'DogicaBold, Dogica, monospace',
+            fontSize: '9.5px',
+            color: '#FFF8EE',
+            align: 'center',
+            letterSpacing: 0.5,
+            wordWrap: { width: modalW - 40 }
+        }).setOrigin(0.5);
+
+        const hintText = this.add.text(0, 24, 'Take this document to the Library to inspect\nand verify its authenticity at the podium!', {
+            fontFamily: 'Dogica, monospace',
+            fontSize: '7.5px',
+            color: '#CBD5E1',
+            align: 'center',
+            lineSpacing: 4
+        }).setOrigin(0.5);
+
+        const okBtnBg = this.add.rectangle(0, modalH / 2 - 22, 100, 22, 0x1E293B, 0.95);
+        okBtnBg.setStrokeStyle(1.2, 0x64748B, 0.8);
+        okBtnBg.setInteractive({ useHandCursor: true });
+
+        const okBtnText = this.add.text(0, modalH / 2 - 22, 'OK (E)', {
+            fontFamily: 'Dogica, monospace',
+            fontSize: '8px',
+            color: '#F8FAFC'
+        }).setOrigin(0.5);
+
+        const closeModal = () => {
+            if (container && container.active) {
+                this.tweens.add({
+                    targets: container,
+                    alpha: 0,
+                    scaleX: 0.95,
+                    scaleY: 0.95,
+                    duration: 150,
+                    onComplete: () => {
+                        if (container && container.active) container.destroy();
+                        if (this.activeModal === container) this.activeModal = null;
+                    }
+                });
+            }
+        };
+
+        okBtnBg.on('pointerdown', closeModal);
+        okBtnBg.on('pointerover', () => okBtnBg.setFillStyle(0x334155));
+        okBtnBg.on('pointerout', () => okBtnBg.setFillStyle(0x1E293B));
+
+        container.add([modalBg, badgeBg, badgeText, nameText, hintText, okBtnBg, okBtnText]);
+
+        container.setAlpha(0);
+        container.setScale(0.92);
+        this.tweens.add({
+            targets: container,
+            alpha: 1,
+            scaleX: 1,
+            scaleY: 1,
+            duration: 150,
+            ease: 'Back.out'
+        });
+
+        // Auto close after 5 seconds if not dismissed
+        this.time.delayedCall(5000, () => {
+            if (this.activeModal === container) closeModal();
+        });
+    }
+
+    showVerificationResultModal(result) {
+        if (this.activeModal) this.activeModal.destroy();
+
+        const { width, height } = this.cameras.main;
+        const centerX = width / 2;
+        const centerY = height / 2;
+
+        const isAuth = !!result.isAuthentic;
+        const modalW = isAuth ? 440 : 380;
+        const modalH = isAuth ? 230 : 160;
+        const strokeColor = isAuth ? 0x10B981 : 0xEF4444;
+        const headerBgColor = isAuth ? 0x064E3B : 0x450A0A;
+        const headerTextColor = isAuth ? '#34D399' : '#F87171';
+
+        const container = this.add.container(centerX, centerY).setDepth(2600);
+        this.activeModal = container;
+
+        const modalBg = this.add.rectangle(0, 0, modalW, modalH, 0x140F14, 0.98);
+        modalBg.setStrokeStyle(2, strokeColor, 0.95);
+
+        const headerBg = this.add.rectangle(0, -modalH / 2 + 22, isAuth ? 280 : 250, 22, headerBgColor, 0.95);
+        headerBg.setStrokeStyle(1.2, strokeColor, 0.8);
+
+        const headerTitle = isAuth
+            ? `✅ AUTHENTIC CLUE (${result.fragmentType || 'CLUE'})`
+            : `❌ IRRELEVANT DECOY DOCUMENT`;
+
+        const headerText = this.add.text(0, -modalH / 2 + 22, headerTitle, {
+            fontFamily: 'DogicaBold, Dogica, monospace',
+            fontSize: '8px',
+            color: headerTextColor,
+            letterSpacing: 0.5
+        }).setOrigin(0.5);
+
+        const titleText = this.add.text(0, isAuth ? -55 : -15, (result.title || result.objectName || 'Document').toUpperCase(), {
+            fontFamily: 'DogicaBold, Dogica, monospace',
+            fontSize: '9.5px',
+            color: isAuth ? '#F59E0B' : '#CBD5E1',
+            align: 'center',
+            letterSpacing: 0.5,
+            wordWrap: { width: modalW - 40 }
+        }).setOrigin(0.5);
+
+        let descBody = '';
+        if (isAuth) {
+            descBody = result.description || 'Verified authentic clue.';
+            if (result.clueText && !descBody.includes(result.clueText)) {
+                descBody += `\n\n📌 "${result.clueText}"`;
+            }
+        } else {
+            descBody = (result.description || 'This document contains no relevant evidence.') +
+                       '\n\nIt has dissolved to dust and was discarded.';
+        }
+
+        const descText = this.add.text(0, isAuth ? 0 : 22, descBody, {
+            fontFamily: 'Dogica, monospace',
+            fontSize: '7.5px',
+            color: isAuth ? '#E2E8F0' : '#94A3B8',
+            align: 'center',
+            lineSpacing: 4,
+            wordWrap: { width: modalW - 40 }
+        }).setOrigin(0.5);
+
+        let nextHint = null;
+        if (isAuth) {
+            nextHint = this.add.text(0, 52, '🏛️ DELIVER THIS CLUE TO VILLAGE HALL ARCHIVE!', {
+                fontFamily: 'DogicaBold, Dogica, monospace',
+                fontSize: '7.5px',
+                color: '#10B981',
+                align: 'center'
+            }).setOrigin(0.5);
+        }
+
+        const btnW = isAuth ? 160 : 100;
+        const btnBg = this.add.rectangle(0, modalH / 2 - 24, btnW, 24, isAuth ? 0x065F46 : 0x1E293B, 0.95);
+        btnBg.setStrokeStyle(1.2, strokeColor, 0.8);
+        btnBg.setInteractive({ useHandCursor: true });
+
+        const btnLabel = this.add.text(0, modalH / 2 - 24, isAuth ? 'DELIVER NOW' : 'OK', {
+            fontFamily: 'Dogica, monospace',
+            fontSize: '8px',
+            color: '#FFFFFF'
+        }).setOrigin(0.5);
+
+        const closeModal = () => {
+            if (container && container.active) {
+                this.tweens.add({
+                    targets: container,
+                    alpha: 0,
+                    scaleX: 0.95,
+                    scaleY: 0.95,
+                    duration: 150,
+                    onComplete: () => {
+                        if (container && container.active) container.destroy();
+                        if (this.activeModal === container) this.activeModal = null;
+                    }
+                });
+            }
+        };
+
+        btnBg.on('pointerdown', closeModal);
+        btnBg.on('pointerover', () => btnBg.setFillStyle(isAuth ? 0x047857 : 0x334155));
+        btnBg.on('pointerout', () => btnBg.setFillStyle(isAuth ? 0x065F46 : 0x1E293B));
+
+        const elements = [modalBg, headerBg, headerText, titleText, descText, btnBg, btnLabel];
+        if (nextHint) elements.push(nextHint);
+        container.add(elements);
+
+        container.setAlpha(0);
+        container.setScale(0.92);
+        this.tweens.add({
+            targets: container,
+            alpha: 1,
+            scaleX: 1,
+            scaleY: 1,
+            duration: 150,
+            ease: 'Back.out'
+        });
+
+        // Auto close fake/decoy notification after 4s
+        if (!isAuth) {
+            this.time.delayedCall(4000, () => {
+                if (this.activeModal === container) closeModal();
+            });
+        }
+    }
+
     showSolveMysteryModal(mysteryData) {
         if (this.activeModal) this.activeModal.destroy();
         this.activeModal = new SolveMysteryModal(this, mysteryData);

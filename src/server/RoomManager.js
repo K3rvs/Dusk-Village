@@ -109,9 +109,9 @@ class RoomManager {
         if (session) session.handleFragmentPickup(playerId, fragmentId);
     }
 
-    handleFragmentDrop(roomCode, playerId, position) {
+    handleFragmentDrop(roomCode, playerId, position, location = 'EXTERIOR') {
         const session = this.rooms.get(roomCode);
-        if (session) session.handleFragmentDrop(playerId, position);
+        if (session) session.handleFragmentDrop(playerId, position, location);
     }
 
     handleVerification(roomCode, playerAId, playerBId) {

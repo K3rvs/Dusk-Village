@@ -76,21 +76,31 @@ export class FragmentManager {
                     text: `Acquired ${fragment.objectName.toUpperCase()}`,
                     color: '#F59E0B'
                 });
+
+                // User-friendly Acquisition Modal Popup
+                const uiScene = (this.scene && this.scene.scene) ? this.scene.scene.get('UIScene') : null;
+                if (uiScene && uiScene.showFragmentAcquiredModal) {
+                    uiScene.showFragmentAcquiredModal(fragment);
+                }
             }
         }
     }
 
     onDropConfirmed(data) {
-        const fragment = this.heldFragments.get(data.playerId);
+        const fragment = this.heldFragments.get(data.playerId) ||
+                         (data.fragmentId ? this.worldFragments.get(data.fragmentId) : null);
         if (fragment) {
-            fragment.drop(data.position.x, data.position.y);
+            const posX = data.position ? data.position.x : fragment.x;
+            const posY = data.position ? data.position.y : fragment.y;
+            fragment.drop(posX, posY);
+            if (data.location) fragment.location = data.location;
             this.heldFragments.delete(data.playerId);
             this.worldFragments.set(fragment.id, fragment);
 
             if (data.playerId === this.scene.localPlayerId) {
                 gameEvents.emit('inventory:updated', { fragment: null });
                 gameEvents.emit('hud:announcement', {
-                    text: `Dropped Document`,
+                    text: `Dropped Document at your feet`,
                     color: '#94A3B8'
                 });
             }
@@ -104,21 +114,24 @@ export class FragmentManager {
             fragment.title = data.title || fragment.title;
             fragment.description = data.description || fragment.description;
             fragment.fragmentType = data.fragmentType || fragment.fragmentType;
+            if (data.clueText) fragment.clueText = data.clueText;
+
+            const uiScene = (this.scene && this.scene.scene) ? this.scene.scene.get('UIScene') : null;
 
             if (data.playerId === this.scene.localPlayerId) {
-                gameEvents.emit('inventory:updated', {
-                    fragment: {
-                        id: fragment.id,
-                        objectName: fragment.objectName,
-                        title: fragment.title,
-                        description: fragment.description,
-                        type: fragment.fragmentType,
-                        isVerified: true,
-                        isAuthentic: data.isAuthentic
-                    }
-                });
-
                 if (data.isAuthentic) {
+                    gameEvents.emit('inventory:updated', {
+                        fragment: {
+                            id: fragment.id,
+                            objectName: fragment.objectName,
+                            title: fragment.title,
+                            description: fragment.description,
+                            type: fragment.fragmentType,
+                            isVerified: true,
+                            isAuthentic: true
+                        }
+                    });
+
                     if (this.scene.sound.get('sfx_fragment_verified')) {
                         this.scene.sound.play('sfx_fragment_verified', { volume: 0.7 });
                     }
@@ -129,18 +142,38 @@ export class FragmentManager {
                         text: `AUTHENTIC: ${fragment.title.toUpperCase()} - DELIVER TO VILLAGE HALL!`,
                         color: '#10B981'
                     });
+
+                    if (uiScene && uiScene.showVerificationResultModal) {
+                        uiScene.showVerificationResultModal(data);
+                    }
                 } else {
+                    // Fake / Decoy fragment: disappears automatically!
+                    this.heldFragments.delete(data.playerId);
+                    this.worldFragments.delete(fragment.id);
+                    fragment.destroy();
+
+                    gameEvents.emit('inventory:updated', { fragment: null });
+
                     if (this.scene.sound.get('sfx_solve_fail')) {
                         this.scene.sound.play('sfx_solve_fail', { volume: 0.5 });
                     }
                     gameEvents.emit('chat:systemMessage', {
-                        content: `❌ VERIFICATION: Irrelevant / Decoy document. Does not match the mystery.`
+                        content: `❌ VERIFICATION: Irrelevant / Decoy document. Discarded automatically.`
                     });
                     gameEvents.emit('hud:announcement', {
-                        text: `VERIFIED: IRRELEVANT DOCUMENT`,
+                        text: `IRRELEVANT DOCUMENT DISCARDED`,
                         color: '#EF4444'
                     });
+
+                    if (uiScene && uiScene.showVerificationResultModal) {
+                        uiScene.showVerificationResultModal(data);
+                    }
                 }
+            } else if (!data.isAuthentic) {
+                // If another player had the decoy verified, delete it for them as well
+                this.heldFragments.delete(data.playerId);
+                this.worldFragments.delete(fragment.id);
+                fragment.destroy();
             }
         }
     }

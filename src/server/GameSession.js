@@ -630,6 +630,7 @@ class GameSession {
         if (!fragment) return;
 
         fragment.isVerified = true;
+        const isAuth = !!fragment.isAuthentic;
 
         const resultMsg = {
             type: 'VERIFICATION_RESULT',
@@ -637,10 +638,18 @@ class GameSession {
             objectName: fragment.objectName,
             title: fragment.title,
             description: fragment.description,
+            clueText: fragment.clueText || null,
             fragmentType: fragment.fragmentType,
-            isAuthentic: fragment.isAuthentic,
+            isAuthentic: isAuth,
             playerId: targetPlayer.id
         };
+
+        if (!isAuth) {
+            // Fake / Irrelevant fragment! Automatically disappears after verification
+            targetPlayer.heldFragmentId = null;
+            fragment.isPickedUp = false;
+            this.worldFragments.delete(fragment.id);
+        }
 
         this.broadcast(resultMsg);
     }
@@ -856,7 +865,7 @@ class GameSession {
         });
     }
 
-    handleFragmentDrop(playerId, position) {
+    handleFragmentDrop(playerId, position, location = 'EXTERIOR') {
         const player = this.players.get(playerId);
         if (!player || !player.heldFragmentId) return;
 
@@ -867,6 +876,14 @@ class GameSession {
             fragment.heldByPlayerId = null;
             fragment.x = position.x;
             fragment.y = position.y;
+            fragment.location = location;
+            if (location !== 'EXTERIOR') {
+                fragment.spawnTile = {
+                    x: Math.max(1, Math.round(position.x / 16)),
+                    y: Math.max(1, Math.round(position.y / 16))
+                };
+            }
+            this.worldFragments.set(fragment.id, fragment);
         }
 
         const droppedFragId = player.heldFragmentId;
@@ -876,7 +893,9 @@ class GameSession {
             type: 'FRAGMENT_DROPPED',
             playerId: playerId,
             fragmentId: droppedFragId,
-            position: position
+            fragment: fragment,
+            position: position,
+            location: location
         });
     }
 

@@ -560,7 +560,11 @@ export default class GameScene extends Phaser.Scene {
 
         gameEvents.on('fragment:attemptDrop', (data) => {
             if (window.socketClient) {
-                window.socketClient.send({ type: 'FRAGMENT_DROP', position: data.position });
+                window.socketClient.send({
+                    type: 'FRAGMENT_DROP',
+                    position: data.position,
+                    location: data.location || 'EXTERIOR'
+                });
             }
         });
 
