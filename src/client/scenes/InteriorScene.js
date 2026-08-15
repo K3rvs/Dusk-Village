@@ -77,17 +77,12 @@ export default class InteriorScene extends Phaser.Scene {
         const cols = (layoutData && layoutData.width) ? layoutData.width : 23;
         const rows = (layoutData && layoutData.height) ? layoutData.height : 15;
         const roomW = cols * 16;
-        const roomH = rows * 16;
-
-        // Dynamic scale & centering
-        const scale = Math.min(2.0, Math.min(this.scale.width / (roomW + 48), this.scale.height / (roomH + 48)));
-        const camW = this.scale.width / scale;
-        const camH = this.scale.height / scale;
-
-        const centerX = camW / 2;
-        const centerY = camH / 2;
-        const roomX = centerX - roomW / 2;
-        const roomY = centerY - roomH / 2;
+        // Immersive interior zoom (3.0x for detailed, crisp pixel art)
+        const interiorZoom = CONFIG.DEFAULT_RENDER_SCALE || 3.0;
+        const centerX = roomW / 2;
+        const centerY = roomH / 2;
+        const roomX = 0;
+        const roomY = 0;
 
         // Floor Color Theme
         let floorColor = 0x4A2E1B; // Warm Timber
@@ -128,9 +123,10 @@ export default class InteriorScene extends Phaser.Scene {
         this.playerSprite.setCollideWorldBounds(true);
         this.playerSprite.setDepth(500);
 
-        // Camera setup
-        this.cameras.main.setZoom(scale);
-        this.cameras.main.centerOn(centerX, centerY);
+        // Camera setup: 3.0x zoom with smooth player follow bounded to room
+        this.cameras.main.setZoom(interiorZoom);
+        this.cameras.main.setBounds(-48, -48, roomW + 96, roomH + 96);
+        this.cameras.main.startFollow(this.playerSprite, true, 0.1, 0.1);
 
         // Input controls
         this.cursors = this.input.keyboard.createCursorKeys();
@@ -383,29 +379,39 @@ export default class InteriorScene extends Phaser.Scene {
     startVerification() {
         this.isVerifying = true;
         
-        const scale = CONFIG.DEFAULT_RENDER_SCALE || 3;
-        const centerX = (this.scale.width / scale) / 2;
-        
-        const barWidth = 140;
-        const barHeight = 12;
-        const barX = centerX - barWidth / 2;
-        const barY = 44;
+        const screenCenterX = this.cameras.main.width / 2;
+        const screenCenterY = this.cameras.main.height / 2;
 
-        const bgBar = this.add.rectangle(barX, barY, barWidth, barHeight, 0x140F14, 0.95).setOrigin(0, 0.5).setDepth(200);
-        bgBar.setStrokeStyle(1.5, 0x785338, 0.9);
+        const barWidth = 340;
+        const barHeight = 24;
 
-        const fillBar = this.add.rectangle(barX + 2, barY, 0, barHeight - 4, 0x10B981).setOrigin(0, 0.5).setDepth(201);
-        const label = this.add.text(centerX, barY - 14, 'VERIFYING DOCUMENT METADATA...', {
+        const overlay = this.add.rectangle(screenCenterX, screenCenterY, 4000, 4000, 0x000000, 0.45)
+            .setScrollFactor(0).setDepth(2000);
+
+        const container = this.add.container(screenCenterX, screenCenterY - 60).setScrollFactor(0).setDepth(2001);
+
+        const modalBg = this.add.rectangle(0, 0, barWidth + 48, 86, 0x140F14, 0.98);
+        modalBg.setStrokeStyle(2, 0xF59E0B, 0.95);
+
+        const label = this.add.text(0, -22, '🔍 VERIFYING DOCUMENT METADATA...', {
             fontFamily: 'DogicaBold, Dogica, monospace',
-            fontSize: '7px',
-            color: '#F59E0B'
-        }).setOrigin(0.5).setDepth(202);
+            fontSize: '9.5px',
+            color: '#F59E0B',
+            letterSpacing: 1
+        }).setOrigin(0.5);
 
-        let sparkle = null;
-        if (this.textures.exists('vfx_verify_sparkle')) {
-            sparkle = this.add.sprite(centerX, 68, 'vfx_verify_sparkle').setDepth(203);
-            if (this.anims.exists('vfx_sparkle_play')) sparkle.play('vfx_sparkle_play');
-        }
+        const bgBar = this.add.rectangle(-barWidth / 2, 12, barWidth, barHeight, 0x0F172A, 0.95).setOrigin(0, 0.5);
+        bgBar.setStrokeStyle(1.5, 0x334155, 0.9);
+
+        const fillBar = this.add.rectangle(-barWidth / 2 + 2, 12, 0, barHeight - 4, 0x10B981).setOrigin(0, 0.5);
+        
+        const percentText = this.add.text(0, 12, '0%', {
+            fontFamily: 'Dogica, monospace',
+            fontSize: '9px',
+            color: '#FFFFFF'
+        }).setOrigin(0.5);
+
+        container.add([modalBg, label, bgBar, fillBar, percentText]);
 
         let progress = 0;
         this.time.addEvent({
@@ -413,14 +419,13 @@ export default class InteriorScene extends Phaser.Scene {
             repeat: 39,
             callback: () => {
                 progress += 0.025;
-                fillBar.width = (barWidth - 4) * progress;
+                fillBar.width = (barWidth - 4) * Math.min(1, progress);
+                percentText.setText(`${Math.round(Math.min(100, progress * 100))}%`);
 
                 if (progress >= 1.0) {
                     this.isVerifying = false;
-                    bgBar.destroy();
-                    fillBar.destroy();
-                    label.destroy();
-                    if (sparkle) sparkle.destroy();
+                    overlay.destroy();
+                    container.destroy();
 
                     if (window.socketClient) {
                         window.socketClient.send({
