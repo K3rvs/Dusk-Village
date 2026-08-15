@@ -115,12 +115,24 @@ export default class GameOverScene extends Phaser.Scene {
         // Bottom Action Buttons
         const btnY = height - 45;
         this.createActionButton(width * 0.36, btnY, 'PLAY AGAIN', 0x10B981, () => {
-            this.scene.start('LobbyScene', { isHost: false });
+            this.cleanupAndNavigate('LobbyScene', { isHost: false });
         });
 
         this.createActionButton(width * 0.64, btnY, 'MAIN MENU', 0x475569, () => {
-            this.scene.start('MenuScene');
+            this.cleanupAndNavigate('MenuScene');
         });
+    }
+
+    cleanupAndNavigate(targetScene, data = {}) {
+        ['GameOverScene', 'InteriorScene', 'UIScene', 'GameScene', 'CharacterSelectScene', 'LobbyScene'].forEach(key => {
+            if (this.scene.manager.getScene(key)) {
+                this.scene.stop(key);
+            }
+        });
+        if (targetScene === 'MenuScene' && window.socketClient) {
+            window.socketClient.disconnect();
+        }
+        this.scene.start(targetScene, data);
     }
 
     getReasonText() {

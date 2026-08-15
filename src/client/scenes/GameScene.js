@@ -597,6 +597,9 @@ export default class GameScene extends Phaser.Scene {
         });
 
         gameEvents.on('game:overReceived', (data) => {
+            if (this.scene.isActive('InteriorScene')) this.scene.stop('InteriorScene');
+            if (this.scene.isActive('UIScene')) this.scene.stop('UIScene');
+            this.scene.stop('GameScene');
             this.scene.start('GameOverScene', {
                 winner: data.winner,
                 reason: data.reason,
