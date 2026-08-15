@@ -91,7 +91,7 @@ export default class InteriorScene extends Phaser.Scene {
 
         // Floor Color Theme
         let floorColor = 0x4A2E1B; // Warm Timber
-        if (bTypeUpper === 'LIBRARY') floorColor = 0x1E293B;
+        if (bTypeUpper === 'LIBRARY' || bTypeUpper === 'ARCHIVES') floorColor = 0x4A2E1B;
         else if (bTypeUpper === 'CLINIC') floorColor = 0x334155;
         else if (bTypeUpper === 'VILLAGE_HALL') floorColor = 0x582C12;
         else if (bTypeUpper === 'SCHOOL') floorColor = 0x5C3B1E;
