@@ -212,6 +212,17 @@ export default class UIScene extends Phaser.Scene {
         // Inner decay progress bar
         const timerDecayBar = this.add.rectangle(centerX - 164, centerY + 107, 328, 3, 0xF59E0B, 0.95).setOrigin(0, 0.5);
 
+        // Minimize Button in top-right corner
+        const minBtnBg = this.add.rectangle(centerX + modalW / 2 - 58, centerY - modalH / 2 + 20, 84, 20, 0x1A141A, 0.9);
+        minBtnBg.setStrokeStyle(1, 0xF59E0B, 0.7);
+        minBtnBg.setInteractive({ useHandCursor: true });
+
+        const minBtnText = this.add.text(centerX + modalW / 2 - 58, centerY - modalH / 2 + 20, '[-] MINIMIZE', {
+            fontFamily: 'Dogica, monospace',
+            fontSize: '7px',
+            color: '#F59E0B'
+        }).setOrigin(0.5);
+
         container.add([
             dimmer,
             modalBg,
@@ -223,10 +234,49 @@ export default class UIScene extends Phaser.Scene {
             descText,
             timerPillBg,
             this.initiationTimerText,
-            timerDecayBar
+            timerDecayBar,
+            minBtnBg,
+            minBtnText
         ]);
 
         this.activeModal = container;
+
+        // Minimized Floating Badge (Appears when minimized)
+        const miniBadge = this.add.container(centerX, 68).setDepth(2100).setVisible(false);
+        const miniBg = this.add.rectangle(0, 0, 360, 26, 0x140F14, 0.96);
+        miniBg.setStrokeStyle(1.5, roleColorNum, 0.95);
+        miniBg.setInteractive({ useHandCursor: true });
+
+        const miniText = this.add.text(0, 0, `${roleIcon} ${role} | ⏳ STAY INSIDE: ${initialDuration}s | [↗ EXPAND]`, {
+            fontFamily: 'Dogica, monospace',
+            fontSize: '8px',
+            color: roleColorHex
+        }).setOrigin(0.5);
+
+        miniBadge.add([miniBg, miniText]);
+
+        // Toggle Minimize / Expand
+        const minimizeModal = () => {
+            container.setVisible(false);
+            miniBadge.setVisible(true);
+            miniBadge.setAlpha(0);
+            this.tweens.add({ targets: miniBadge, alpha: 1, duration: 150 });
+        };
+
+        const expandModal = () => {
+            miniBadge.setVisible(false);
+            container.setVisible(true);
+            container.setAlpha(0);
+            this.tweens.add({ targets: container, alpha: 1, duration: 150 });
+        };
+
+        minBtnBg.on('pointerdown', minimizeModal);
+        minBtnBg.on('pointerover', () => { minBtnBg.setFillStyle(0x2E1E12); minBtnText.setColor('#FDE68A'); });
+        minBtnBg.on('pointerout', () => { minBtnBg.setFillStyle(0x1A141A); minBtnText.setColor('#F59E0B'); });
+
+        miniBg.on('pointerdown', expandModal);
+        miniBg.on('pointerover', () => { miniBg.setFillStyle(0x24181A); });
+        miniBg.on('pointerout', () => { miniBg.setFillStyle(0x140F14); });
 
         // Smooth entry animation
         container.setAlpha(0);
@@ -251,6 +301,7 @@ export default class UIScene extends Phaser.Scene {
 
         const closeModal = () => {
             cleanupListeners();
+            if (miniBadge && miniBadge.active) miniBadge.destroy();
             if (this.activeModal === container) {
                 this.tweens.add({
                     targets: container,
@@ -271,6 +322,9 @@ export default class UIScene extends Phaser.Scene {
             const tot = data.total || 15;
             if (this.initiationTimerText && this.initiationTimerText.active) {
                 this.initiationTimerText.setText(`⏳ STAY INSIDE: ${rem}s`);
+            }
+            if (miniText && miniText.active) {
+                miniText.setText(`${roleIcon} ${role} | ⏳ STAY INSIDE: ${rem}s | [↗ EXPAND]`);
             }
             if (timerDecayBar && timerDecayBar.active) {
                 timerDecayBar.scaleX = Math.max(0, Math.min(1, rem / tot));

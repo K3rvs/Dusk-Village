@@ -58,9 +58,12 @@ export class PhaseManager {
         // Show Banner Toast Announcement on Scene
         this.showPhaseBanner(phase);
 
-        // Start countdown
+        // Start countdown on UIScene (which is never paused during interiors)
         if (this.timerEvent) this.timerEvent.remove();
-        this.timerEvent = this.scene.time.addEvent({
+        const uiScene = (this.scene && this.scene.scene) ? this.scene.scene.get('UIScene') : null;
+        const timerScene = (uiScene && uiScene.time) ? uiScene : this.scene;
+        
+        this.timerEvent = timerScene.time.addEvent({
             delay: 1000,
             repeat: Math.max(1, this.totalDuration - 1),
             callback: () => this.tick()
