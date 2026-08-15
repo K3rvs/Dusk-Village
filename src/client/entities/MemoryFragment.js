@@ -17,10 +17,15 @@ export class MemoryFragment {
         this.mysteryStage = data.mysteryStage || 1;
         this.markedAsForged = false;
 
-        const posX = data.x !== undefined ? data.x : (data.spawnTile ? data.spawnTile.x * 16 : 768);
-        const posY = data.y !== undefined ? data.y : (data.spawnTile ? data.spawnTile.y * 16 : 580);
+        const posX = data.x !== undefined && data.x !== null ? data.x : 768;
+        const posY = data.y !== undefined && data.y !== null ? data.y : 580;
         this.x = posX;
         this.y = posY;
+        this.spawnTile = data.spawnTile || null;
+
+        // Determine if this fragment lives in an interior building
+        const INTERIOR_LOCATIONS = ['SCHOOL', 'CLINIC', 'HOUSE', 'VILLAGE_HALL', 'LIBRARY', 'ARCHIVES'];
+        this.isInterior = INTERIOR_LOCATIONS.includes(this.location);
 
         // Create world sprite (pulsing scroll / clue sparkle)
         this.worldSprite = scene.add.sprite(posX, posY, 'spr_frag_world_pulse');
@@ -33,8 +38,8 @@ export class MemoryFragment {
         this.interactionZone = scene.add.zone(posX, posY, 32, 32);
         scene.physics.add.existing(this.interactionZone, true);
 
-        // Hide in exterior GameScene if located inside an interior building
-        if (this.location !== 'EXTERIOR') {
+        // Hide in GameScene exterior if this fragment belongs inside a building
+        if (this.isInterior) {
             this.worldSprite.setVisible(false);
             this.interactionZone.setActive(false);
         }

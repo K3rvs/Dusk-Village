@@ -1,40 +1,41 @@
 const { MYSTERIES, DECOY_FRAGMENTS_POOL } = require('./MysteryRegistry');
 const { v4: uuidv4 } = require('uuid');
 
+// Exterior walkable areas near School and Clinic only
+// (excludes: player houses, village hall, village square, library)
 const EXTERIOR_ACCESSIBLE_SPAWN_POINTS = [
-    // Around School Plaza & Walkways
-    { x: 520, y: 280, area: 'School Courtyard' },
-    { x: 576, y: 280, area: 'School Plaza' },
-    { x: 480, y: 320, area: 'School Walkway' },
-    { x: 620, y: 320, area: 'School East Path' },
-    
-    // Around Clinic Courtyard & Paths
-    { x: 848, y: 280, area: 'Clinic Courtyard' },
-    { x: 912, y: 280, area: 'Clinic Garden' },
-    { x: 960, y: 320, area: 'Clinic East Path' },
-    { x: 832, y: 320, area: 'Clinic West Walkway' },
-    
-    // Village Square & Plaza (Central accessible park / roads)
-    { x: 704, y: 560, area: 'Village Square West' },
-    { x: 832, y: 560, area: 'Village Square East' },
-    { x: 720, y: 640, area: 'Village Square Plaza' },
-    { x: 816, y: 640, area: 'Village Square South' },
-    { x: 768, y: 680, area: 'Central Crossroad' },
-    
-    // Library Exterior Walkways
-    { x: 440, y: 560, area: 'Library Gardens' },
-    { x: 440, y: 620, area: 'Library Walkway' },
-    { x: 520, y: 650, area: 'Library South Path' },
-    
-    // Village Hall Exterior Plaza
-    { x: 1000, y: 560, area: 'Village Hall Plaza' },
-    { x: 1080, y: 560, area: 'Village Hall Courtyard' },
-    { x: 1020, y: 650, area: 'Village Hall South Walkway' },
-    
-    // South Orchard & Paths
-    { x: 640, y: 780, area: 'Orchard Path' },
-    { x: 768, y: 820, area: 'South Plaza' },
-    { x: 880, y: 780, area: 'South Crossroads' }
+    // -- SCHOOL EXTERIOR --
+    { x: 448, y: 256, area: 'School North Gate',      location: 'EXTERIOR' },
+    { x: 528, y: 256, area: 'School Front Plaza',      location: 'EXTERIOR' },
+    { x: 608, y: 256, area: 'School East Entrance',   location: 'EXTERIOR' },
+    { x: 464, y: 304, area: 'School West Path',        location: 'EXTERIOR' },
+    { x: 640, y: 304, area: 'School East Path',        location: 'EXTERIOR' },
+    { x: 496, y: 352, area: 'School South Walk W',     location: 'EXTERIOR' },
+    { x: 576, y: 352, area: 'School South Walk C',     location: 'EXTERIOR' },
+    { x: 624, y: 352, area: 'School South Walk E',     location: 'EXTERIOR' },
+
+    // -- SCHOOL INTERIOR --
+    { x: null, y: null, area: 'School Interior NW',   location: 'SCHOOL', spawnTile: { x: 3,  y: 3  } },
+    { x: null, y: null, area: 'School Interior NE',   location: 'SCHOOL', spawnTile: { x: 19, y: 3  } },
+    { x: null, y: null, area: 'School Interior CW',   location: 'SCHOOL', spawnTile: { x: 4,  y: 10 } },
+    { x: null, y: null, area: 'School Interior CE',   location: 'SCHOOL', spawnTile: { x: 18, y: 10 } },
+    { x: null, y: null, area: 'School Interior SW',   location: 'SCHOOL', spawnTile: { x: 5,  y: 18 } },
+    { x: null, y: null, area: 'School Interior SE',   location: 'SCHOOL', spawnTile: { x: 17, y: 18 } },
+
+    // -- CLINIC EXTERIOR --
+    { x: 832, y: 256, area: 'Clinic North Gate',       location: 'EXTERIOR' },
+    { x: 896, y: 256, area: 'Clinic Front',             location: 'EXTERIOR' },
+    { x: 960, y: 256, area: 'Clinic East Entrance',    location: 'EXTERIOR' },
+    { x: 816, y: 304, area: 'Clinic West Path',         location: 'EXTERIOR' },
+    { x: 976, y: 304, area: 'Clinic East Path',         location: 'EXTERIOR' },
+    { x: 848, y: 352, area: 'Clinic South Walk W',      location: 'EXTERIOR' },
+    { x: 912, y: 352, area: 'Clinic South Walk C',      location: 'EXTERIOR' },
+    { x: 944, y: 352, area: 'Clinic South Walk E',      location: 'EXTERIOR' },
+
+    // -- CLINIC INTERIOR --
+    { x: null, y: null, area: 'Clinic Interior N',     location: 'CLINIC', spawnTile: { x: 3, y: 3  } },
+    { x: null, y: null, area: 'Clinic Interior C',     location: 'CLINIC', spawnTile: { x: 5, y: 7  } },
+    { x: null, y: null, area: 'Clinic Interior S',     location: 'CLINIC', spawnTile: { x: 3, y: 12 } },
 ];
 
 class GameSession {
@@ -132,6 +133,7 @@ class GameSession {
     }
 
     handleStartEarly(playerId) {
+        if (this.hostId !== playerId) return;
         if (this.state !== 'CHARACTER_SELECT') return;
 
         if (this.characterSelectTimer) {
@@ -227,55 +229,49 @@ class GameSession {
             }
         });
 
-        // Shuffle open accessible spawn points
+        // Shuffle all spawn points
         const availablePoints = [...EXTERIOR_ACCESSIBLE_SPAWN_POINTS].sort(() => Math.random() - 0.5);
 
         const stageTypeMap = { 1: 'claim', 2: 'context', 3: 'source' };
         const stageType = stageTypeMap[stage];
         const authenticData = this.currentMystery.fragments[stageType];
 
-        // 1. Authentic Stage Fragment
-        const ptAuth = availablePoints.pop() || { x: 768, y: 580 };
-        const authenticFrag = {
-            id: authenticData.id,
-            objectName: authenticData.objectName || 'A mysterious document',
-            title: authenticData.title,
-            description: authenticData.description,
-            clueText: authenticData.clueText,
-            fragmentType: stageType.toUpperCase(),
-            location: 'EXTERIOR',
-            x: ptAuth.x,
-            y: ptAuth.y,
-            isAuthentic: true,
-            isPickedUp: false,
-            heldByPlayerId: null,
-            isVerified: false,
-            mysteryStage: stage
-        };
-        this.worldFragments.set(authenticFrag.id, authenticFrag);
-        this.broadcast({ type: 'FRAGMENT_SPAWNED', fragment: authenticFrag });
-
-        // 2. Spawn 3 Decoy Fragments scattered across open walkable areas
-        const shuffledDecoys = [...DECOY_FRAGMENTS_POOL].sort(() => Math.random() - 0.5);
-        for (let i = 0; i < 3; i++) {
-            const ptDecoy = availablePoints.pop() || { x: 768 + (i - 1) * 40, y: 600 };
-            const decoyTpl = shuffledDecoys[i] || { objectName: 'A scrap of paper', title: 'Scrap Note', description: 'Unrelated note.' };
-            const decoyId = `decoy_${stage}_${i}_${uuidv4().substring(0, 6)}`;
-            const decoyFrag = {
-                id: decoyId,
-                objectName: decoyTpl.objectName,
-                title: decoyTpl.title,
-                description: decoyTpl.description,
+        const buildFragment = (id, template, isAuthentic, ptObj) => {
+            const loc = ptObj.location || 'EXTERIOR';
+            return {
+                id,
+                objectName: template.objectName || 'A mysterious document',
+                title: template.title,
+                description: template.description,
+                clueText: template.clueText || null,
                 fragmentType: stageType.toUpperCase(),
-                location: 'EXTERIOR',
-                x: ptDecoy.x,
-                y: ptDecoy.y,
-                isAuthentic: false,
+                location: loc,
+                // World-space coords for EXTERIOR spawns; null for interior
+                x: ptObj.x !== null ? ptObj.x : null,
+                y: ptObj.y !== null ? ptObj.y : null,
+                // Tile offset for SCHOOL / CLINIC interior spawns
+                spawnTile: ptObj.spawnTile || null,
+                isAuthentic,
                 isPickedUp: false,
                 heldByPlayerId: null,
                 isVerified: false,
                 mysteryStage: stage
             };
+        };
+
+        // 1. Authentic Stage Fragment
+        const ptAuth = availablePoints.pop() || { x: 528, y: 304, location: 'EXTERIOR' };
+        const authenticFrag = buildFragment(authenticData.id, authenticData, true, ptAuth);
+        this.worldFragments.set(authenticFrag.id, authenticFrag);
+        this.broadcast({ type: 'FRAGMENT_SPAWNED', fragment: authenticFrag });
+
+        // 2. Spawn 3 Decoy Fragments
+        const shuffledDecoys = [...DECOY_FRAGMENTS_POOL].sort(() => Math.random() - 0.5);
+        for (let i = 0; i < 3; i++) {
+            const ptDecoy = availablePoints.pop() || { x: 896 + (i - 1) * 32, y: 304, location: 'EXTERIOR' };
+            const decoyTpl = shuffledDecoys[i] || { objectName: 'A scrap of paper', title: 'Scrap Note', description: 'Unrelated note.' };
+            const decoyId = `decoy_${stage}_${i}_${uuidv4().substring(0, 6)}`;
+            const decoyFrag = buildFragment(decoyId, decoyTpl, false, ptDecoy);
             this.worldFragments.set(decoyFrag.id, decoyFrag);
             this.broadcast({ type: 'FRAGMENT_SPAWNED', fragment: decoyFrag });
         }
@@ -1037,20 +1033,6 @@ class GameSession {
         if (player) {
             player.avatarId = avatarId;
             this.broadcast({ type: 'CHARACTER_SELECTED', playerId, avatarId });
-
-            // If all human players have chosen an avatar, start the game after 600ms
-            const allSelected = Array.from(this.players.values()).every(p => p.avatarId);
-            if (allSelected && this.state === 'CHARACTER_SELECT') {
-                if (this.characterSelectTimer) {
-                    clearTimeout(this.characterSelectTimer);
-                    this.characterSelectTimer = null;
-                }
-                setTimeout(() => {
-                    if (this.state === 'CHARACTER_SELECT') {
-                        this.handleStartEarly(this.hostId);
-                    }
-                }, 600);
-            }
         }
     }
 

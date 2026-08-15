@@ -319,16 +319,21 @@ export default class InteriorScene extends Phaser.Scene {
 
         allFrags.forEach(frag => {
             const loc = (frag.location || '').toUpperCase();
-            const matchesBuilding = loc === bType || 
+
+            // Match fragment location to current building type
+            const matchesBuilding =
+                loc === bType ||
                 (loc === 'HOUSE' && (bType === 'HOUSE' || bId.startsWith('HOUSE'))) ||
                 (loc === 'VILLAGE_HALL' && (bType === 'VILLAGE_HALL' || bType === 'VILLAGEHALL')) ||
-                (loc === 'LIBRARY' && (bType === 'LIBRARY' || bType === 'ARCHIVES'));
+                (loc === 'LIBRARY' && (bType === 'LIBRARY' || bType === 'ARCHIVES')) ||
+                (loc === 'SCHOOL' && bType === 'SCHOOL') ||
+                (loc === 'CLINIC' && bType === 'CLINIC');
 
             if (matchesBuilding) {
-                // Determine spawn coordinates
-                const spawnTile = frag.spawnTile || frag.spawnLocation || { x: 4, y: 3 };
+                // Use spawnTile if available (interior fragments), else center of room
+                const spawnTile = frag.spawnTile || { x: 4, y: 4 };
                 const fx = rx + (spawnTile.x || 4) * 16;
-                const fy = ry + (spawnTile.y || 3) * 16;
+                const fy = ry + (spawnTile.y || 4) * 16;
 
                 // Create sprite
                 const sprite = this.add.sprite(fx, fy, 'spr_frag_world_pulse');
