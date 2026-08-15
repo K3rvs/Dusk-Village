@@ -77,10 +77,10 @@ export default class BootScene extends Phaser.Scene {
         this.load.image('tileset_buildings_master', 'assets/sprites/buildings/tileset_buildings_master.png');
 
         // --- Terrain ---
-        this.load.image('tile_ground_dirt', 'assets/sprites/terrain/tile_ground_dirt.png');
-        this.load.image('tile_ground_cobble', 'assets/sprites/terrain/tile_ground_cobble.png');
-        this.load.image('tile_ground_grass', 'assets/sprites/terrain/tile_ground_grass_01.png');
-        this.load.image('tile_ground_stone', 'assets/sprites/terrain/tile_ground_stone.png');
+        this.load.image('tile_ground_dirt', 'assets/sprites/terrain/tile_single_dirt.png');
+        this.load.image('tile_ground_cobble', 'assets/sprites/terrain/tile_single_cobble.png');
+        this.load.image('tile_ground_grass', 'assets/sprites/terrain/tile_single_grass.png');
+        this.load.image('tile_ground_stone', 'assets/sprites/terrain/tile_single_stone.png');
         this.load.spritesheet('spr_tree_autumn_oak', 'assets/sprites/terrain/spr_tree_autumn_oak.png', { frameWidth: 32, frameHeight: 48 });
         this.load.image('spr_tree_pine_border', 'assets/sprites/terrain/sprite_tree_pine.png');
         this.load.image('spr_bush_rose', 'assets/sprites/terrain/sprite_bush_rose.png');
