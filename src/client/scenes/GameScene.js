@@ -337,6 +337,30 @@ export default class GameScene extends Phaser.Scene {
                 }
                 this.treesGroup.add(item);
             }
+
+            // Market stands & outdoor decor props
+            const marketProps = {
+                mkt_stand_1: { w: 3, h: 3 },
+                mkt_stand_2: { w: 3, h: 3 },
+                mkt_stand_3: { w: 3, h: 3 },
+                mkt_stand_4: { w: 3, h: 3 },
+                mkt_stand_5: { w: 2, h: 2 },
+                mkt_cart: { w: 2, h: 2 },
+                mkt_picnic: { w: 3, h: 2 },
+                mkt_sign: { w: 1, h: 2 },
+                mkt_flower_bed: { w: 2, h: 2 }
+            };
+
+            if (marketProps[s.key] && this.textures.exists(s.key)) {
+                const mp = marketProps[s.key];
+                const px = (s.x + mp.w / 2) * tileSize;
+                const py = (s.y + mp.h) * tileSize;
+                const prop = this.add.image(px, py, s.key);
+                prop.setOrigin(0.5, 1.0);
+                prop.setDepth(py);
+                prop.setDisplaySize(mp.w * tileSize, mp.h * tileSize);
+                this.treesGroup.add(prop);
+            }
         });
     }
 

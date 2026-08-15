@@ -99,6 +99,15 @@ export default class BootScene extends Phaser.Scene {
         // --- Props & Furniture ---
         this.load.image('outdoor_props', 'assets/sprites/props/outdoor_props.png');
         this.load.image('interior_props', 'assets/sprites/props/interior_props.png');
+        this.load.image('mkt_stand_1', 'assets/sprites/props/marketplace/market stand 1.png');
+        this.load.image('mkt_stand_2', 'assets/sprites/props/marketplace/market stand 2.png');
+        this.load.image('mkt_stand_3', 'assets/sprites/props/marketplace/market stand 3.png');
+        this.load.image('mkt_stand_4', 'assets/sprites/props/marketplace/market stand 4.png');
+        this.load.image('mkt_stand_5', 'assets/sprites/props/marketplace/market stand 5.png');
+        this.load.image('mkt_cart', 'assets/sprites/props/marketplace/cart.png');
+        this.load.image('mkt_picnic', 'assets/sprites/props/marketplace/picnic table.png');
+        this.load.image('mkt_sign', 'assets/sprites/props/marketplace/sign post.png');
+        this.load.image('mkt_flower_bed', 'assets/sprites/props/marketplace/flower bed.png');
 
 
         // --- Icons ---
