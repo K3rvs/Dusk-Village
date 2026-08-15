@@ -13,8 +13,8 @@ export class MysteryStatusPanel {
         this.container.setScrollFactor(0);
         this.container.setDepth(300);
 
-        // Warm Espresso Walnut Glass Panel (Interactive)
-        this.bg = scene.add.rectangle(0, 0, this.panelW, this.panelH, 0x140F14, 0.95).setOrigin(0, 0).setInteractive({ useHandCursor: true });
+        // Warm Espresso Walnut Glass Panel (Status Overview Display)
+        this.bg = scene.add.rectangle(0, 0, this.panelW, this.panelH, 0x140F14, 0.95).setOrigin(0, 0);
         this.bg.setStrokeStyle(1.8, 0x785338, 0.9);
 
         // Header Title Bar
@@ -74,14 +74,6 @@ export class MysteryStatusPanel {
             this.container.add([rowBg, labelText, statusBg, statusText]);
             this.fragmentRows[item.key] = { rowBg, statusBg, statusText, labelText };
         });
-
-        // Click on panel opens mystery modal
-        this.bg.on('pointerdown', () => {
-            gameEvents.emit('interaction:trigger', { action: 'SOLVE_MYSTERY' });
-        });
-
-        this.bg.on('pointerover', () => this.bg.setStrokeStyle(1.8, 0xF59E0B, 1));
-        this.bg.on('pointerout', () => this.bg.setStrokeStyle(1.8, 0x785338, 0.9));
 
         this.setupEventListeners();
     }
