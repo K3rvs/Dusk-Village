@@ -16,8 +16,10 @@ export default class CharacterSelectScene extends Phaser.Scene {
 
     setupNetwork() {
         gameEvents.off('phase:serverChanged', this.onPhaseChange, this);
+        gameEvents.off('role:assigned', this.onRoleAssigned, this);
+
         this.onPhaseChange = (data) => {
-            if (data.phase === 'ROLE_ASSIGNMENT') {
+            if (data && (data.phase === 'ROLE_ASSIGNMENT' || data.phase === 'DAY_PHASE')) {
                 const roomData = window.socketClient ? window.socketClient.currentRoom : null;
                 this.scene.start('GameScene', {
                     mystery: data.mystery,
@@ -27,7 +29,20 @@ export default class CharacterSelectScene extends Phaser.Scene {
                 });
             }
         };
+
+        this.onRoleAssigned = (data) => {
+            const roomData = window.socketClient ? window.socketClient.currentRoom : null;
+            this.scene.start('GameScene', {
+                mystery: data ? data.mystery : null,
+                avatarId: this.selectedAvatar || '01',
+                playerId: roomData ? roomData.playerId : 'local_player',
+                players: roomData ? roomData.players : [],
+                role: data ? data.role : 'SURVIVOR'
+            });
+        };
+
         gameEvents.on('phase:serverChanged', this.onPhaseChange, this);
+        gameEvents.on('role:assigned', this.onRoleAssigned, this);
     }
 
     create() {
