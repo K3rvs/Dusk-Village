@@ -77,6 +77,7 @@ export default class InteriorScene extends Phaser.Scene {
         const cols = (layoutData && layoutData.width) ? layoutData.width : 23;
         const rows = (layoutData && layoutData.height) ? layoutData.height : 15;
         const roomW = cols * 16;
+        const roomH = rows * 16;
         // Immersive interior zoom (3.0x for detailed, crisp pixel art)
         const interiorZoom = CONFIG.DEFAULT_RENDER_SCALE || 3.0;
         const centerX = roomW / 2;
