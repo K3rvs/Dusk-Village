@@ -164,26 +164,36 @@ export class VotingModal {
             ease: 'Back.out'
         });
 
-        // 5. Minimized Pill Badge (Top-Center)
-        this.minimizedPill = scene.add.container(centerX, 28).setDepth(2700);
+        // 5. Minimized Pill Badge (Positioned directly below the Village Archive HUD panel)
+        const pillX = camW - 16 - 105;
+        const pillY = 56 + 150 + 8 + 14; // 228px (just below the 150px high Village Archive panel at y:56)
+        this.minimizedPill = scene.add.container(pillX, pillY).setDepth(2700);
         this.minimizedPill.setScrollFactor(0);
         this.minimizedPill.setVisible(false);
 
-        const pillBg = scene.add.rectangle(0, 0, 320, 26, 0x1A1111, 0.96);
-        pillBg.setStrokeStyle(1.5, 0xEF4444, 0.95);
+        const pillBg = scene.add.rectangle(0, 0, 210, 28, 0x140F14, 0.98);
+        pillBg.setStrokeStyle(1.6, 0xEF4444, 0.95);
         pillBg.setInteractive({ useHandCursor: true });
 
-        const pillText = scene.add.text(0, 0, '⚖️ COUNCIL VOTING [ CLICK TO EXPAND ⤢ ]', {
+        const pillText = scene.add.text(0, 0, '⚖️ COUNCIL VOTE [ ⤢ ]', {
             fontFamily: 'DogicaBold, Dogica, monospace',
             fontSize: '7.5px',
-            color: '#F87171'
+            color: '#F87171',
+            letterSpacing: 0.5
         }).setOrigin(0.5);
 
-        pillBg.on('pointerover', () => pillBg.setFillStyle(0x2A1515));
-        pillBg.on('pointerout', () => pillBg.setFillStyle(0x1A1111));
+        pillBg.on('pointerover', () => pillBg.setFillStyle(0x2A1010));
+        pillBg.on('pointerout', () => pillBg.setFillStyle(0x140F14));
         pillBg.on('pointerdown', () => this.restore());
 
         this.minimizedPill.add([pillBg, pillText]);
+
+        this.resizeListener = (gameSize) => {
+            if (this.minimizedPill) {
+                this.minimizedPill.setPosition(gameSize.width - 121, 228);
+            }
+        };
+        scene.scale.on('resize', this.resizeListener);
 
         this.setupEventListeners();
     }
@@ -270,6 +280,9 @@ export class VotingModal {
         if (this.phaseListener) {
             gameEvents.off('phase:changed', this.phaseListener);
             gameEvents.off('phase:serverChanged', this.phaseListener);
+        }
+        if (this.resizeListener && this.scene && this.scene.scale) {
+            this.scene.scale.off('resize', this.resizeListener);
         }
         if (this.container && this.container.active) {
             this.container.destroy();
