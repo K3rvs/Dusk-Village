@@ -77,6 +77,8 @@ export default class InteriorScene extends Phaser.Scene {
         const cols = (layoutData && layoutData.width) ? layoutData.width : 23;
         const rows = (layoutData && layoutData.height) ? layoutData.height : 15;
         const roomW = cols * 16;
+        const roomH = rows * 16;
+
         // Dynamic centered room positioning based on zoom
         const interiorZoom = CONFIG.DEFAULT_RENDER_SCALE || 3.0;
         const camW = this.scale.width / interiorZoom;
