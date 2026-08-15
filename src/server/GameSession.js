@@ -287,6 +287,7 @@ class GameSession {
 
     startRoleAssignment() {
         this.currentPhase = 'ROLE_ASSIGNMENT';
+        this.currentDayNumber = 1;
         
         // Calculate player cottage positions (Inside house for 15 seconds)
         const spawnPositions = {};
@@ -301,6 +302,7 @@ class GameSession {
             type: 'PHASE_CHANGE',
             phase: 'ROLE_ASSIGNMENT',
             duration: 15,
+            dayNumber: 1,
             spawnPositions,
             mystery: {
                 id: this.currentMystery.id,
@@ -431,6 +433,7 @@ class GameSession {
             type: 'PHASE_CHANGE',
             phase: 'JUDGEMENT_PHASE',
             duration: 60, // 1 minute
+            dayNumber: this.currentDayNumber,
             spawnPositions
         });
 
@@ -515,6 +518,7 @@ class GameSession {
             type: 'PHASE_CHANGE',
             phase: 'NIGHT_PHASE',
             duration: 30, // 30 seconds Night Phase
+            dayNumber: this.currentDayNumber,
             spawnPositions
         });
 

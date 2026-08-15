@@ -82,7 +82,15 @@ export class TopBar {
         this.dayText.setPosition(width - 16 - dayPillW / 2, 23);
     }
 
-    updatePhaseDisplay(phaseRaw) {
+    updatePhaseDisplay(phaseRaw, dayNumber = null) {
+        if (dayNumber !== null && dayNumber !== undefined) {
+            this.currentDayNumber = dayNumber;
+        } else if (this.scene.gameScene && this.scene.gameScene.phaseManager) {
+            this.currentDayNumber = this.scene.gameScene.phaseManager.dayNumber || 1;
+        } else {
+            this.currentDayNumber = this.currentDayNumber || 1;
+        }
+
         const raw = phaseRaw ? String(phaseRaw).toUpperCase() : 'DAY_PHASE';
         let color = '#F59E0B';
         let strokeColor = 0xF59E0B;
@@ -92,18 +100,30 @@ export class TopBar {
             color = '#A855F7';
             strokeColor = 0xA855F7;
             displayPhase = 'NIGHT PHASE';
+            this.dayText.setText(`NIGHT ${this.currentDayNumber}`);
+            this.dayText.setColor('#C084FC');
+            this.dayPillBg.setStrokeStyle(1.5, 0xA855F7, 0.9);
         } else if (raw.includes('JUDGEMENT') || raw.includes('JUDGMENT')) {
             color = '#EF4444';
             strokeColor = 0xEF4444;
             displayPhase = 'JUDGEMENT PHASE';
+            this.dayText.setText(`DAY ${this.currentDayNumber}`);
+            this.dayText.setColor('#F87171');
+            this.dayPillBg.setStrokeStyle(1.5, 0xEF4444, 0.9);
         } else if (raw.includes('INITIATION') || raw.includes('ROLE_ASSIGNMENT') || raw.includes('ROLE')) {
             color = '#38BDF8';
             strokeColor = 0x38BDF8;
             displayPhase = 'INITIATION PHASE';
+            this.dayText.setText(`DAY 1`);
+            this.dayText.setColor('#38BDF8');
+            this.dayPillBg.setStrokeStyle(1.5, 0x38BDF8, 0.9);
         } else if (raw.includes('DAY')) {
-            color = '#F59E0B';
-            strokeColor = 0xF59E0B;
+            color = '#10B981';
+            strokeColor = 0x10B981;
             displayPhase = 'DAY PHASE';
+            this.dayText.setText(`DAY ${this.currentDayNumber}`);
+            this.dayText.setColor('#34D399');
+            this.dayPillBg.setStrokeStyle(1.5, 0x10B981, 0.9);
         }
 
         this.phaseText.setText(displayPhase);
@@ -113,18 +133,23 @@ export class TopBar {
     }
 
     setupEventListeners() {
+        this.currentDayNumber = 1;
+
         // Query initial phase state from GameScene if available
         if (this.scene.gameScene && this.scene.gameScene.phaseManager) {
             const pm = this.scene.gameScene.phaseManager;
-            this.updatePhaseDisplay(pm.currentPhase);
+            this.currentDayNumber = pm.dayNumber || 1;
+            this.updatePhaseDisplay(pm.currentPhase, this.currentDayNumber);
         }
 
         gameEvents.on('phase:changed', (data) => {
-            this.updatePhaseDisplay(data.to);
+            const day = data.dayNumber || data.day || this.currentDayNumber;
+            this.updatePhaseDisplay(data.to, day);
         });
 
         gameEvents.on('phase:serverChanged', (data) => {
-            this.updatePhaseDisplay(data.phase || data.to);
+            const day = data.dayNumber || data.day || this.currentDayNumber;
+            this.updatePhaseDisplay(data.phase || data.to, day);
         });
 
         gameEvents.on('phase:timerTick', (data) => {
@@ -155,8 +180,9 @@ export class TopBar {
         });
 
         gameEvents.on('game:dayChanged', (data) => {
-            if (data && data.day) {
-                this.dayText.setText(`DAY ${data.day}`);
+            if (data && (data.day || data.dayNumber)) {
+                this.currentDayNumber = data.day || data.dayNumber;
+                this.updatePhaseDisplay(this.phaseText.text, this.currentDayNumber);
             }
         });
     }

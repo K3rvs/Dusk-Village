@@ -671,7 +671,7 @@ export default class GameScene extends Phaser.Scene {
 
     onPhaseChanged(data) {
         const phaseName = data.phase || data.to;
-        this.phaseManager.startPhase(phaseName);
+        this.phaseManager.startPhase(phaseName, data.duration, data.dayNumber);
 
         // Smooth camera blackout transition
         if (this.cameras && this.cameras.main) {

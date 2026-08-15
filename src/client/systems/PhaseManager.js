@@ -8,12 +8,14 @@ export class PhaseManager {
         this.currentPhase = PHASES.DAY_PHASE;
         this.timeRemaining = 0;
         this.totalDuration = 0;
+        this.dayNumber = 1;
         this.isRunning = false;
         this.timerEvent = null;
 
         gameEvents.on('phase:timeSync', (data) => {
             if (data && data.remaining !== undefined) {
                 if (data.total) this.totalDuration = data.total;
+                if (data.dayNumber) this.dayNumber = data.dayNumber;
                 // Only snap to server value if we've drifted by more than 2 seconds
                 // This prevents the local Phaser timer and server sync fighting each other
                 const serverRemaining = Math.round(data.remaining);
@@ -21,6 +23,7 @@ export class PhaseManager {
                 if (drift > 2) {
                     this.timeRemaining = serverRemaining;
                     gameEvents.emit('phase:timerTick', {
+                        phase: this.currentPhase,
                         remaining: this.timeRemaining,
                         total: this.totalDuration,
                         displayString: formatTime(this.timeRemaining)
@@ -30,7 +33,10 @@ export class PhaseManager {
         });
     }
 
-    startPhase(phase, durationOverride = null) {
+    startPhase(phase, durationOverride = null, dayNumber = null) {
+        if (dayNumber !== null && dayNumber !== undefined) {
+            this.dayNumber = dayNumber;
+        }
         this.currentPhase = phase;
         this.totalDuration = durationOverride || this.getPhaseDuration(phase);
         this.timeRemaining = this.totalDuration;
@@ -39,11 +45,13 @@ export class PhaseManager {
         gameEvents.emit('phase:changed', {
             from: this.currentPhase,
             to: phase,
-            duration: this.totalDuration
+            duration: this.totalDuration,
+            dayNumber: this.dayNumber
         });
 
         // Immediately emit first timer tick so TopBar updates with 0 latency
         gameEvents.emit('phase:timerTick', {
+            phase: this.currentPhase,
             remaining: this.timeRemaining,
             total: this.totalDuration,
             displayString: formatTime(this.timeRemaining)
