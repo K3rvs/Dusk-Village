@@ -47,7 +47,15 @@ export default class InteriorScene extends Phaser.Scene {
             'vh_chair': 'prop_living_chair',
             'vh_wall_banner': 'prop_school_bookshelf',
             'vh_sideboard': 'prop_clinic_cab_wd',
-            'vh_chandelier': 'prop_submit_table'
+            'vh_chandelier': 'prop_submit_table',
+            'lib_bookcase_wide': 'prop_large_bookshelf',
+            'lib_tall_bookshelf': 'prop_school_bookshelf',
+            'lib_reading_table': 'prop_students_table',
+            'lib_curator_desk': 'prop_library_desk',
+            'lib_globe_stand': 'prop_small_table',
+            'lib_card_catalog': 'prop_clinic_cab_wd',
+            'lib_scroll_rack': 'prop_small_bookshelf',
+            'lib_manuscript_shelf': 'prop_medium_bookshelf'
         };
         if (aliases[key] && this.textures.exists(aliases[key])) return aliases[key];
         return null;
