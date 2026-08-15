@@ -132,7 +132,6 @@ class GameSession {
     }
 
     handleStartEarly(playerId) {
-        if (this.hostId !== playerId) return;
         if (this.state !== 'CHARACTER_SELECT') return;
 
         if (this.characterSelectTimer) {
@@ -1038,6 +1037,20 @@ class GameSession {
         if (player) {
             player.avatarId = avatarId;
             this.broadcast({ type: 'CHARACTER_SELECTED', playerId, avatarId });
+
+            // If all human players have chosen an avatar, start the game after 600ms
+            const allSelected = Array.from(this.players.values()).every(p => p.avatarId);
+            if (allSelected && this.state === 'CHARACTER_SELECT') {
+                if (this.characterSelectTimer) {
+                    clearTimeout(this.characterSelectTimer);
+                    this.characterSelectTimer = null;
+                }
+                setTimeout(() => {
+                    if (this.state === 'CHARACTER_SELECT') {
+                        this.handleStartEarly(this.hostId);
+                    }
+                }, 600);
+            }
         }
     }
 

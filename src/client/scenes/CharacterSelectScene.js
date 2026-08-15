@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { CONFIG } from '../utils/Constants.js';
+import { gameEvents } from '../utils/EventBus.js';
 
 export default class CharacterSelectScene extends Phaser.Scene {
     constructor() {
@@ -9,25 +10,24 @@ export default class CharacterSelectScene extends Phaser.Scene {
     init() {
         this.selectedAvatar = null;
         this.isConfirmed = false;
-        this.timeRemaining = CONFIG.CHARACTER_SELECT_DURATION;
+        this.timeRemaining = CONFIG.CHARACTER_SELECT_DURATION || 30;
         this.setupNetwork();
     }
 
     setupNetwork() {
-        import('../utils/EventBus.js').then(({ gameEvents }) => {
-            gameEvents.off('phase:serverChanged');
-            gameEvents.on('phase:serverChanged', (data) => {
-                if (data.phase === 'ROLE_ASSIGNMENT') {
-                    const roomData = window.socketClient ? window.socketClient.currentRoom : null;
-                    this.scene.start('GameScene', {
-                        mystery: data.mystery,
-                        avatarId: this.selectedAvatar || '01',
-                        playerId: roomData ? roomData.playerId : 'local_player',
-                        players: roomData ? roomData.players : []
-                    });
-                }
-            });
-        });
+        gameEvents.off('phase:serverChanged', this.onPhaseChange, this);
+        this.onPhaseChange = (data) => {
+            if (data.phase === 'ROLE_ASSIGNMENT') {
+                const roomData = window.socketClient ? window.socketClient.currentRoom : null;
+                this.scene.start('GameScene', {
+                    mystery: data.mystery,
+                    avatarId: this.selectedAvatar || '01',
+                    playerId: roomData ? roomData.playerId : 'local_player',
+                    players: roomData ? roomData.players : []
+                });
+            }
+        };
+        gameEvents.on('phase:serverChanged', this.onPhaseChange, this);
     }
 
     create() {
