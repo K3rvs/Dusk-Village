@@ -659,6 +659,10 @@ export default class GameScene extends Phaser.Scene {
         gameEvents.on('building:exit', () => {
             this.scene.setVisible(true, 'GameScene');
             this.scene.resume('GameScene');
+            if (this.localPlayer && this.localPlayer.sprite) {
+                this.localPlayer.sprite.y += 18;
+                if (this.localPlayer.shadow) this.localPlayer.shadow.y += 18;
+            }
         });
     }
 

@@ -41,11 +41,11 @@ export default class InteriorScene extends Phaser.Scene {
         const aliases = {
             'vh_podium': 'prop_podium',
             'vh_long_table': 'prop_hall_table',
-            'vh_council_table': 'prop_submit_table',
-            'vh_record_cabinet': 'prop_student_locker',
+            'vh_council_table': 'prop_teacher_table',
+            'vh_record_cabinet': 'prop_clinic_cab_wd',
             'vh_records_box': 'prop_small_bookshelf',
             'vh_chair': 'prop_living_chair',
-            'vh_wall_banner': 'prop_chalk_board',
+            'vh_wall_banner': 'prop_school_bookshelf',
             'vh_sideboard': 'prop_clinic_cab_wd',
             'vh_chandelier': 'prop_submit_table'
         };
@@ -104,9 +104,9 @@ export default class InteriorScene extends Phaser.Scene {
         // Physics World Collision Bounds
         this.physics.world.setBounds(roomX + 8, roomY + 8, roomW - 16, roomH - 16);
 
-        // Spawn Player Sprite (Bottom Center of room)
+        // Spawn Player Sprite (Bottom Center of room, comfortably above the door)
         const spawnX = centerX;
-        const spawnY = roomY + roomH - 24;
+        const spawnY = roomY + roomH - 48;
 
         const avatarId = this.localPlayer.avatarId || '01';
         const spriteKey = `spr_avatar_${avatarId}`;
@@ -431,12 +431,17 @@ export default class InteriorScene extends Phaser.Scene {
         const mat = this.add.rectangle(exitX, exitY, 32, 8, 0x231E1B);
         mat.setStrokeStyle(1, 0xD97706, 0.9);
 
-        this.exitZone = this.add.zone(exitX, exitY + 2, 36, 14);
+        this.exitZone = this.add.zone(exitX, exitY + 4, 36, 14);
         this.physics.add.existing(this.exitZone, true);
+
+        this.canExit = false;
+        this.time.delayedCall(700, () => {
+            this.canExit = true;
+        });
 
         this.lastLockedAlertTime = 0;
         this.physics.add.overlap(this.playerSprite, this.exitZone, () => {
-            if (!this.isVerifying) {
+            if (!this.isVerifying && this.canExit) {
                 if (this.isLockedForInitiation || this.isLockedForNight) {
                     const now = Date.now();
                     if (now - this.lastLockedAlertTime > 2500) {
@@ -445,6 +450,7 @@ export default class InteriorScene extends Phaser.Scene {
                         gameEvents.emit('hud:announcement', { text: msg, color: '#EF4444' });
                     }
                 } else {
+                    this.canExit = false;
                     this.exitBuilding();
                 }
             }
