@@ -173,6 +173,32 @@ class GameSession {
                         animation: `avatar_${bot.avatarId || '01'}_walk_${dx > 0 ? 'east' : 'west'}`
                     }, bot.id);
                 } else if (this.currentPhase === 'JUDGEMENT_PHASE') {
+                    // Periodic discussion messages from bots in Town Chat
+                    if (Math.random() < 0.2) {
+                        const livingOthers = this.getAlivePlayers().filter(p => p.id !== bot.id);
+                        if (livingOthers.length > 0) {
+                            const randomSuspect = livingOthers[Math.floor(Math.random() * livingOthers.length)];
+                            const discussionPrompts = [
+                                `I saw ${randomSuspect.name} walking suspiciously earlier.`,
+                                `Who was seen near the Library verification podium?`,
+                                `Let's make sure we find the Instigators!`,
+                                `I think ${randomSuspect.name} might be holding fake documents.`,
+                                `Remember to check the clues in the Village Hall!`,
+                                `Look closely at who was roaming during the day.`,
+                                `Let's cast our votes before the timer expires.`
+                            ];
+                            const msgText = discussionPrompts[Math.floor(Math.random() * discussionPrompts.length)];
+                            this.broadcast({
+                                type: 'CHAT_MESSAGE',
+                                senderId: bot.id,
+                                senderName: bot.name,
+                                content: msgText,
+                                mode: 'TOWN',
+                                timestamp: Date.now()
+                            });
+                        }
+                    }
+
                     if (!this.votes.has(bot.id)) {
                         const human = Array.from(this.players.values()).find(p => !p.isBot && p.isAlive);
                         let botChoice = 'SKIP';

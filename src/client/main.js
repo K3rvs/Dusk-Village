@@ -32,6 +32,9 @@ const gameConfig = {
         width: '100%',
         height: '100%'
     },
+    dom: {
+        createContainer: true
+    },
     scene: [
         BootScene,
         MenuScene,
