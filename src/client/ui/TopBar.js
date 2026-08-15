@@ -114,7 +114,7 @@ export class TopBar {
             color = '#38BDF8';
             strokeColor = 0x38BDF8;
             displayPhase = 'INITIATION PHASE';
-            this.dayText.setText(`DAY 1`);
+            this.dayText.setText('INITIATION');
             this.dayText.setColor('#38BDF8');
             this.dayPillBg.setStrokeStyle(1.5, 0x38BDF8, 0.9);
         } else if (raw.includes('DAY')) {

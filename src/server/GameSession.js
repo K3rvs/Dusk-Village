@@ -287,7 +287,7 @@ class GameSession {
 
     startRoleAssignment() {
         this.currentPhase = 'ROLE_ASSIGNMENT';
-        this.currentDayNumber = 1;
+        this.currentDayNumber = 0;
         
         // Calculate player cottage positions (Inside house for 15 seconds)
         const spawnPositions = {};
