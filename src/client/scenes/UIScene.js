@@ -290,48 +290,53 @@ export default class UIScene extends Phaser.Scene {
             ease: 'Back.out'
         });
 
-        // Event-driven countdown synchronized with TopBar & PhaseManager
+        // Dedicated 15-second per-second countdown
+        let secondsRemaining = 15;
+        const totalDuration = 15;
+
+        const timerEvent = this.time.addEvent({
+            delay: 1000,
+            repeat: 14,
+            callback: () => {
+                secondsRemaining--;
+                if (this.initiationTimerText && this.initiationTimerText.active) {
+                    this.initiationTimerText.setText(`⏳ STAY INSIDE: ${Math.max(0, secondsRemaining)}s`);
+                }
+                if (miniText && miniText.active) {
+                    miniText.setText(`${roleIcon} ${role} | ⏳ STAY INSIDE: ${Math.max(0, secondsRemaining)}s | [↗ EXPAND]`);
+                }
+                if (timerDecayBar && timerDecayBar.active) {
+                    timerDecayBar.scaleX = Math.max(0, secondsRemaining / totalDuration);
+                }
+                if (secondsRemaining <= 0) {
+                    closeModal();
+                }
+            }
+        });
+
         const cleanupListeners = () => {
-            import('../utils/EventBus.js').then(({ gameEvents }) => {
-                gameEvents.off('phase:timerTick', onTick);
-                gameEvents.off('phase:changed', onPhaseEnd);
-                gameEvents.off('phase:serverChanged', onPhaseEnd);
-            });
+            if (timerEvent) timerEvent.remove();
+            gameEvents.off('phase:changed', onPhaseEnd);
+            gameEvents.off('phase:serverChanged', onPhaseEnd);
         };
 
         const closeModal = () => {
             cleanupListeners();
             if (miniBadge && miniBadge.active) miniBadge.destroy();
-            if (this.activeModal === container) {
+            if (container && container.active) {
                 this.tweens.add({
                     targets: container,
                     alpha: 0,
                     scaleX: 0.95,
                     scaleY: 0.95,
-                    duration: 200,
+                    duration: 150,
                     onComplete: () => {
-                        container.destroy();
+                        if (container && container.active) container.destroy();
                         if (this.activeModal === container) this.activeModal = null;
                     }
                 });
             }
-        };
-
-        const onTick = (data) => {
-            const rem = data.remaining !== undefined ? data.remaining : 0;
-            const tot = data.total || 15;
-            if (this.initiationTimerText && this.initiationTimerText.active) {
-                this.initiationTimerText.setText(`⏳ STAY INSIDE: ${rem}s`);
-            }
-            if (miniText && miniText.active) {
-                miniText.setText(`${roleIcon} ${role} | ⏳ STAY INSIDE: ${rem}s | [↗ EXPAND]`);
-            }
-            if (timerDecayBar && timerDecayBar.active) {
-                timerDecayBar.scaleX = Math.max(0, Math.min(1, rem / tot));
-            }
-            if (rem <= 0) {
-                closeModal();
-            }
+            gameEvents.emit('interior:unlockInitiation');
         };
 
         const onPhaseEnd = (data) => {
@@ -341,11 +346,8 @@ export default class UIScene extends Phaser.Scene {
             }
         };
 
-        import('../utils/EventBus.js').then(({ gameEvents }) => {
-            gameEvents.on('phase:timerTick', onTick);
-            gameEvents.on('phase:changed', onPhaseEnd);
-            gameEvents.on('phase:serverChanged', onPhaseEnd);
-        });
+        gameEvents.on('phase:changed', onPhaseEnd);
+        gameEvents.on('phase:serverChanged', onPhaseEnd);
     }
 
     update() {
