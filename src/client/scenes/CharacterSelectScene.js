@@ -1,6 +1,5 @@
 import Phaser from 'phaser';
 import { CONFIG } from '../utils/Constants.js';
-import { gameEvents } from '../utils/EventBus.js';
 
 export default class CharacterSelectScene extends Phaser.Scene {
     constructor() {
@@ -10,39 +9,25 @@ export default class CharacterSelectScene extends Phaser.Scene {
     init() {
         this.selectedAvatar = null;
         this.isConfirmed = false;
-        this.timeRemaining = CONFIG.CHARACTER_SELECT_DURATION || 30;
+        this.timeRemaining = CONFIG.CHARACTER_SELECT_DURATION;
         this.setupNetwork();
     }
 
     setupNetwork() {
-        gameEvents.off('phase:serverChanged', this.onPhaseChange, this);
-        gameEvents.off('role:assigned', this.onRoleAssigned, this);
-
-        this.onPhaseChange = (data) => {
-            if (data && (data.phase === 'ROLE_ASSIGNMENT' || data.phase === 'DAY_PHASE')) {
-                const roomData = window.socketClient ? window.socketClient.currentRoom : null;
-                this.scene.start('GameScene', {
-                    mystery: data.mystery,
-                    avatarId: this.selectedAvatar || '01',
-                    playerId: roomData ? roomData.playerId : 'local_player',
-                    players: roomData ? roomData.players : []
-                });
-            }
-        };
-
-        this.onRoleAssigned = (data) => {
-            const roomData = window.socketClient ? window.socketClient.currentRoom : null;
-            this.scene.start('GameScene', {
-                mystery: data ? data.mystery : null,
-                avatarId: this.selectedAvatar || '01',
-                playerId: roomData ? roomData.playerId : 'local_player',
-                players: roomData ? roomData.players : [],
-                role: data ? data.role : 'SURVIVOR'
+        import('../utils/EventBus.js').then(({ gameEvents }) => {
+            gameEvents.off('phase:serverChanged');
+            gameEvents.on('phase:serverChanged', (data) => {
+                if (data.phase === 'ROLE_ASSIGNMENT') {
+                    const roomData = window.socketClient ? window.socketClient.currentRoom : null;
+                    this.scene.start('GameScene', {
+                        mystery: data.mystery,
+                        avatarId: this.selectedAvatar || '01',
+                        playerId: roomData ? roomData.playerId : 'local_player',
+                        players: roomData ? roomData.players : []
+                    });
+                }
             });
-        };
-
-        gameEvents.on('phase:serverChanged', this.onPhaseChange, this);
-        gameEvents.on('role:assigned', this.onRoleAssigned, this);
+        });
     }
 
     create() {
@@ -63,30 +48,30 @@ export default class CharacterSelectScene extends Phaser.Scene {
         // 2. Dynamic Floating Amber Embers
         this.createAmbientEmbers(width, height);
 
-        // 3. Header Title & Subtitle
-        this.add.text(width / 2, 36, 'CHOOSE YOUR AVATAR', {
+        // 3. Header Title & Subtitle (Larger & Prominent)
+        this.add.text(width / 2, 40, 'CHOOSE  YOUR  AVATAR', {
             fontFamily: 'DogicaBold, Dogica, monospace',
-            fontSize: '22px',
+            fontSize: '30px',
             color: '#FFF8EE',
-            letterSpacing: 2,
-            shadow: { offsetX: 0, offsetY: 3, color: '#D97706', blur: 16, fill: true }
+            letterSpacing: 3,
+            shadow: { offsetX: 0, offsetY: 3, color: '#D97706', blur: 20, fill: true }
         }).setOrigin(0.5).setDepth(10);
 
-        this.add.text(width / 2, 60, 'SELECT YOUR VILLAGE IDENTITY FOR THE MYSTERY', {
-            fontFamily: 'Dogica, monospace',
-            fontSize: '8.5px',
+        this.add.text(width / 2, 70, 'SELECT YOUR VILLAGE IDENTITY FOR THE MYSTERY', {
+            fontFamily: 'DogicaBold, monospace',
+            fontSize: '10.5px',
             color: '#E2D5C3',
-            letterSpacing: 0.5
+            letterSpacing: 1
         }).setOrigin(0.5).setDepth(10);
 
         // 4. Timer Chronometer Pill Card
-        this.timerCard = this.add.container(width / 2, 92).setDepth(10);
-        this.timerBg = this.add.rectangle(0, 0, 260, 32, 0x140F14, 0.95);
+        this.timerCard = this.add.container(width / 2, 108).setDepth(10);
+        this.timerBg = this.add.rectangle(0, 0, 280, 36, 0x140F14, 0.95);
         this.timerBg.setStrokeStyle(1.8, 0xF59E0B, 0.9);
 
         this.timerText = this.add.text(0, 0, `TIME: 0:${String(this.timeRemaining).padStart(2, '0')}`, {
             fontFamily: 'DogicaBold, Dogica, monospace',
-            fontSize: '10px',
+            fontSize: '12px',
             color: '#F59E0B',
             letterSpacing: 1
         }).setOrigin(0.5);
@@ -94,14 +79,14 @@ export default class CharacterSelectScene extends Phaser.Scene {
         this.timerCard.add([this.timerBg, this.timerText]);
 
         // 5. Host Start Early Button (Top-Right)
-        this.hostStartBtn = this.add.container(width - 24, 38).setDepth(15);
-        const hostBtnBg = this.add.rectangle(0, 0, 160, 36, 0x15803D, 0.92).setOrigin(1, 0.5);
-        hostBtnBg.setStrokeStyle(1.5, 0x4ADE80, 0.8);
+        this.hostStartBtn = this.add.container(width - 24, 40).setDepth(15);
+        const hostBtnBg = this.add.rectangle(0, 0, 180, 42, 0x15803D, 0.95).setOrigin(1, 0.5);
+        hostBtnBg.setStrokeStyle(1.5, 0x4ADE80, 0.85);
         hostBtnBg.setInteractive({ useHandCursor: true });
 
-        const hostBtnText = this.add.text(-80, 0, '▶ START EARLY', {
+        const hostBtnText = this.add.text(-90, 0, '▶ START EARLY', {
             fontFamily: 'DogicaBold, Dogica, monospace',
-            fontSize: '8.5px',
+            fontSize: '10px',
             color: '#FFFFFF'
         }).setOrigin(0.5);
 
@@ -129,14 +114,14 @@ export default class CharacterSelectScene extends Phaser.Scene {
             { id: '06', name: 'OFFICER', title: 'VILLAGE GUARD', icon: '👮', accent: 0x10B981 }
         ];
 
-        // 7. Render 6 Centered Avatar Cards
+        // 7. Render 6 Centered Avatar Cards (Larger & Prominent)
         this.avatarCards = [];
-        const cardW = 150;
-        const cardH = 226;
-        const gapX = 20;
+        const cardW = 160;
+        const cardH = 246;
+        const gapX = 22;
         const totalW = cardW * 6 + gapX * 5;
         const startX = (width - totalW) / 2 + cardW / 2;
-        const cardY = height * 0.51;
+        const cardY = height * 0.52;
 
         avatars.forEach((av, i) => {
             const x = startX + i * (cardW + gapX);
@@ -146,12 +131,12 @@ export default class CharacterSelectScene extends Phaser.Scene {
 
         // 8. Bottom Action Button
         this.confirmButtonContainer = this.add.container(width / 2, height - 48).setDepth(20);
-        this.confirmButtonBg = this.add.rectangle(0, 0, 360, 48, 0x241A22, 0.9);
-        this.confirmButtonBg.setStrokeStyle(1.8, 0x785338, 0.8);
+        this.confirmButtonBg = this.add.rectangle(0, 0, 440, 48, 0x241A22, 0.95);
+        this.confirmButtonBg.setStrokeStyle(1.8, 0x785338, 0.85);
 
         this.confirmButtonText = this.add.text(0, 0, 'SELECT AN AVATAR TO PROCEED', {
             fontFamily: 'DogicaBold, Dogica, monospace',
-            fontSize: '9.5px',
+            fontSize: '11px',
             color: '#A89F91',
             letterSpacing: 0.5
         }).setOrigin(0.5);
@@ -230,60 +215,60 @@ export default class CharacterSelectScene extends Phaser.Scene {
         const container = this.add.container(x, y).setDepth(10);
 
         // 1. Frosted Glass Card Frame
-        const bg = this.add.rectangle(0, 0, w, h, 0x140F14, 0.94);
+        const bg = this.add.rectangle(0, 0, w, h, 0x140F14, 0.95);
         bg.setStrokeStyle(1.8, 0x785338, 0.85);
         bg.setInteractive({ useHandCursor: true });
 
         // 2. Top Role Emoji Badge
-        const iconBadgeBg = this.add.circle(0, -h / 2 + 22, 16, 0x231E1B);
+        const iconBadgeBg = this.add.circle(0, -h / 2 + 24, 18, 0x231E1B);
         iconBadgeBg.setStrokeStyle(1, 0x785338);
 
-        const iconBadge = this.add.text(0, -h / 2 + 22, avData.icon, {
-            fontSize: '15px'
+        const iconBadge = this.add.text(0, -h / 2 + 24, avData.icon, {
+            fontSize: '18px'
         }).setOrigin(0.5);
 
         // 3. Avatar Stage Platform Box
-        const stageBg = this.add.rectangle(0, -12, w - 24, 76, 0x1A141A, 1);
+        const stageBg = this.add.rectangle(0, -10, w - 24, 88, 0x1A141A, 1);
         stageBg.setStrokeStyle(1, 0x3D322A);
 
-        const shadowPedestal = this.add.ellipse(0, 12, 44, 12, 0x000000, 0.6);
+        const shadowPedestal = this.add.ellipse(0, 18, 50, 14, 0x000000, 0.6);
 
         // 4. Pixel Art Character Walk/Idle Sprite (Prominent & Clean)
         const spriteKey = `spr_avatar_${avData.id}`;
         let avatarSprite;
         if (this.textures.exists(spriteKey)) {
             avatarSprite = this.add.sprite(0, -10, spriteKey, 0);
-            avatarSprite.setScale(2.8);
+            avatarSprite.setScale(3.2);
             const idleAnim = `avatar_${avData.id}_idle_south`;
             if (this.anims.exists(idleAnim)) {
                 avatarSprite.play(idleAnim);
             }
         } else {
-            avatarSprite = this.add.rectangle(0, -10, 28, 38, avData.accent);
+            avatarSprite = this.add.rectangle(0, -10, 32, 44, avData.accent);
         }
 
-        // 5. Role Title & Archetype Subtitle
-        const roleText = this.add.text(0, 48, avData.name, {
+        // 5. Role Title & Archetype Subtitle (Larger Fonts)
+        const roleText = this.add.text(0, 56, avData.name, {
             fontFamily: 'DogicaBold, Dogica, monospace',
-            fontSize: '9.5px',
+            fontSize: '11.5px',
             color: '#FFF8EE',
             letterSpacing: 1
         }).setOrigin(0.5);
 
-        const titleText = this.add.text(0, 66, avData.title, {
-            fontFamily: 'Dogica, monospace',
-            fontSize: '6.5px',
+        const titleText = this.add.text(0, 78, avData.title, {
+            fontFamily: 'DogicaBold, monospace',
+            fontSize: '8px',
             color: '#E5D5C5',
             letterSpacing: 0.5
         }).setOrigin(0.5);
 
         // 6. Selected Status Tag Badge
-        const selectTagBg = this.add.rectangle(0, 92, w - 30, 20, 0x064E3B, 0.95).setVisible(false);
-        selectTagBg.setStrokeStyle(1, 0x10B981);
+        const selectTagBg = this.add.rectangle(0, 104, w - 28, 22, 0x064E3B, 0.95).setVisible(false);
+        selectTagBg.setStrokeStyle(1.2, 0x10B981);
 
-        const selectTagText = this.add.text(0, 92, '✓ SELECTED', {
+        const selectTagText = this.add.text(0, 104, '✓ SELECTED', {
             fontFamily: 'DogicaBold, Dogica, monospace',
-            fontSize: '7px',
+            fontSize: '8px',
             color: '#4ADE80'
         }).setOrigin(0.5).setVisible(false);
 
@@ -333,87 +318,86 @@ export default class CharacterSelectScene extends Phaser.Scene {
             id: avData.id,
             accent: avData.accent,
             name: avData.name,
-            baseY: y
+            y
         };
     }
 
-    selectAvatar(avatarId) {
-        this.selectedAvatar = avatarId;
+    selectAvatar(id) {
+        this.selectedAvatar = id;
 
         this.avatarCards.forEach(card => {
-            if (card.id === avatarId) {
+            if (card.id === id) {
                 card.bg.setStrokeStyle(2.5, 0xF59E0B, 1);
-                card.bg.setFillStyle(0x2A1B24, 0.98);
+                card.bg.setFillStyle(0x2A1C16, 0.98);
+                card.roleText.setColor('#F59E0B');
                 card.selectTagBg.setVisible(true);
                 card.selectTagText.setVisible(true);
-                this.tweens.add({ targets: card.container, y: card.baseY - 12, duration: 150 });
+
+                this.tweens.add({
+                    targets: card.container,
+                    y: card.y - 12,
+                    duration: 150,
+                    ease: 'Back.easeOut'
+                });
             } else {
                 card.bg.setStrokeStyle(1.8, 0x785338, 0.85);
                 card.bg.setFillStyle(0x140F14, 0.94);
+                card.roleText.setColor('#FFF8EE');
                 card.selectTagBg.setVisible(false);
                 card.selectTagText.setVisible(false);
-                this.tweens.add({ targets: card.container, y: card.baseY, duration: 150 });
+
+                this.tweens.add({
+                    targets: card.container,
+                    y: card.y,
+                    duration: 150,
+                    ease: 'Power1'
+                });
             }
         });
 
-        // Enable confirm button with emerald glow
-        const selectedCard = this.avatarCards.find(c => c.id === avatarId);
-        const name = selectedCard ? selectedCard.name : 'AVATAR';
-        
-        this.confirmButtonBg.setFillStyle(0x15803D, 0.95);
-        this.confirmButtonBg.setStrokeStyle(2, 0x4ADE80, 0.9);
-        this.confirmButtonBg.setInteractive({ useHandCursor: true });
-        this.confirmButtonText.setText(`CONFIRM: ${name} ▶`);
-        this.confirmButtonText.setColor('#FFFFFF');
+        const chosen = this.avatarCards.find(c => c.id === id);
+        if (chosen) {
+            this.confirmButtonBg.setFillStyle(0x15803D, 0.95);
+            this.confirmButtonBg.setStrokeStyle(1.8, 0x4ADE80, 0.9);
+            this.confirmButtonBg.setInteractive({ useHandCursor: true });
+            this.confirmButtonText.setText(`CONFIRM ${chosen.name} IDENTITY`);
+            this.confirmButtonText.setColor('#FFFFFF');
 
-        this.confirmButtonBg.off('pointerdown');
-        this.confirmButtonBg.on('pointerdown', () => this.confirmSelection());
+            this.confirmButtonBg.removeAllListeners('pointerdown');
+            this.confirmButtonBg.on('pointerdown', () => this.confirmSelection());
+        }
+
+        if (this.sound.get('sfx_button_click')) {
+            this.sound.play('sfx_button_click', { volume: 0.4 });
+        }
     }
 
     confirmSelection() {
         if (this.isConfirmed || !this.selectedAvatar) return;
         this.isConfirmed = true;
 
-        if (this.sound.get('sfx_button_click')) {
-            this.sound.play('sfx_button_click', { volume: 0.5 });
-        }
+        this.confirmButtonBg.setFillStyle(0x064E3B, 0.95);
+        this.confirmButtonBg.setStrokeStyle(1.8, 0x10B981, 0.9);
+        this.confirmButtonBg.disableInteractive();
+        this.confirmButtonText.setText('✓ IDENTITY CONFIRMED - WAITING...');
+        this.confirmButtonText.setColor('#4ADE80');
 
         if (window.socketClient) {
-            window.socketClient.send({ type: 'CHARACTER_SELECTED', avatarId: this.selectedAvatar });
-            window.socketClient.send({ type: 'START_EARLY' });
+            window.socketClient.send({
+                type: 'SELECT_CHARACTER',
+                avatarId: this.selectedAvatar
+            });
         }
-
-        this.confirmButtonBg.setFillStyle(0x064E3B, 1);
-        this.confirmButtonBg.setStrokeStyle(2, 0x10B981, 1);
-        this.confirmButtonText.setText('✓ ENTERING GAME...');
-        this.confirmButtonBg.removeInteractive();
-
-        // Guaranteed transition fallback: Transition into GameScene after 800ms if server message has not already triggered it
-        this.time.delayedCall(800, () => {
-            if (this.scene.isActive('CharacterSelectScene')) {
-                const roomData = window.socketClient ? window.socketClient.currentRoom : null;
-                this.scene.start('GameScene', {
-                    avatarId: this.selectedAvatar || '01',
-                    playerId: roomData ? roomData.playerId : 'local_player',
-                    players: roomData ? roomData.players : []
-                });
-            }
-        });
     }
 
-    update(time) {
+    update(time, delta) {
         if (this.embers) {
-            const height = this.cameras.main.height;
-            const width = this.cameras.main.width;
-
-            this.embers.forEach(p => {
-                p.shape.y += p.speedY;
-                p.shape.x = p.baseX + Math.sin(time * p.swaySpeed + p.offset) * 10;
-
-                if (p.shape.y < -15) {
-                    p.shape.y = height + 15;
-                    p.baseX = Phaser.Math.Between(10, width - 10);
-                    p.shape.x = p.baseX;
+            this.embers.forEach(e => {
+                e.shape.y += e.speedY;
+                e.shape.x = e.baseX + Math.sin(time * e.swaySpeed + e.offset) * 16;
+                if (e.shape.y < -10) {
+                    e.shape.y = this.cameras.main.height + 15;
+                    e.baseX = Phaser.Math.Between(10, this.cameras.main.width - 10);
                 }
             });
         }

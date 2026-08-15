@@ -16,19 +16,13 @@ export class PhaseManager {
             if (data && data.remaining !== undefined) {
                 if (data.total) this.totalDuration = data.total;
                 if (data.dayNumber) this.dayNumber = data.dayNumber;
-                // Only snap to server value if we've drifted by more than 2 seconds
-                // This prevents the local Phaser timer and server sync fighting each other
-                const serverRemaining = Math.round(data.remaining);
-                const drift = Math.abs(this.timeRemaining - serverRemaining);
-                if (drift > 2) {
-                    this.timeRemaining = serverRemaining;
-                    gameEvents.emit('phase:timerTick', {
-                        phase: this.currentPhase,
-                        remaining: this.timeRemaining,
-                        total: this.totalDuration,
-                        displayString: formatTime(this.timeRemaining)
-                    });
-                }
+                this.timeRemaining = Math.max(0, Math.round(data.remaining));
+                gameEvents.emit('phase:timerTick', {
+                    phase: this.currentPhase,
+                    remaining: this.timeRemaining,
+                    total: this.totalDuration,
+                    displayString: formatTime(this.timeRemaining)
+                });
             }
         });
     }

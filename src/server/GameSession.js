@@ -636,15 +636,13 @@ class GameSession {
             this.phaseSecondsRemaining--;
             if (this.phaseSecondsRemaining < 0) this.phaseSecondsRemaining = 0;
 
-            // Broadcast periodic timer sync every 5 seconds or when critical
-            if (this.phaseSecondsRemaining % 5 === 0 || this.phaseSecondsRemaining <= 10) {
-                this.broadcast({
-                    type: 'TIME_SYNC',
-                    phase: this.currentPhase,
-                    remaining: this.phaseSecondsRemaining,
-                    total: durationSeconds
-                });
-            }
+            // Broadcast smooth timer sync every second to all clients
+            this.broadcast({
+                type: 'TIME_SYNC',
+                phase: this.currentPhase,
+                remaining: this.phaseSecondsRemaining,
+                total: durationSeconds
+            });
 
             if (this.phaseSecondsRemaining <= 0) {
                 clearInterval(this.timerInterval);

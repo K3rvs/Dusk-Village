@@ -31,31 +31,31 @@ export default class LobbyScene extends Phaser.Scene {
         // 2. Dynamic Floating Amber Embers
         this.createAmbientEmbers(width, height);
 
-        // 3. Header Title Banner
-        this.add.text(width / 2, 38, 'MULTIPLAYER LOBBY', {
+        // 3. Header Title Banner (Larger & Prominent)
+        this.add.text(width / 2, 40, 'MULTIPLAYER  LOBBY', {
             fontFamily: 'DogicaBold, Dogica, monospace',
-            fontSize: '22px',
+            fontSize: '30px',
             color: '#FFF8EE',
-            letterSpacing: 2,
-            shadow: { offsetX: 0, offsetY: 3, color: '#D97706', blur: 16, fill: true }
+            letterSpacing: 3,
+            shadow: { offsetX: 0, offsetY: 3, color: '#D97706', blur: 20, fill: true }
         }).setOrigin(0.5).setDepth(10);
 
         // 4. Interactive Room Code Banner Card
-        this.roomCard = this.add.container(width / 2, 78).setDepth(10);
-        const roomBg = this.add.rectangle(0, 0, 360, 38, 0x140F14, 0.95);
+        this.roomCard = this.add.container(width / 2, 88).setDepth(10);
+        const roomBg = this.add.rectangle(0, 0, 480, 44, 0x140F14, 0.95);
         roomBg.setStrokeStyle(1.8, 0xF59E0B, 0.9);
         roomBg.setInteractive({ useHandCursor: true });
 
-        this.roomCodeText = this.add.text(-20, 0, 'ROOM CODE: FETCHING...', {
+        this.roomCodeText = this.add.text(-25, 0, 'ROOM CODE: FETCHING...', {
             fontFamily: 'DogicaBold, Dogica, monospace',
-            fontSize: '10px',
+            fontSize: '11.5px',
             color: '#F59E0B',
             letterSpacing: 1
         }).setOrigin(0.5);
 
-        this.copyBadge = this.add.text(140, 0, '[COPY]', {
-            fontFamily: 'Dogica, monospace',
-            fontSize: '8px',
+        this.copyBadge = this.add.text(180, 0, '[COPY]', {
+            fontFamily: 'DogicaBold, monospace',
+            fontSize: '9px',
             color: '#E5D5C5'
         }).setOrigin(0.5);
 
@@ -74,28 +74,28 @@ export default class LobbyScene extends Phaser.Scene {
             }
         });
 
-        // 5. Central Roster Glass Board (2 Columns, Centered, No Gap)
-        const rosterBoardW = 760;
-        const rosterBoardH = 300;
-        const rosterCenterY = height * 0.48;
+        // 5. Central Roster Glass Board (2 Columns, Spacious & Large)
+        const rosterBoardW = 880;
+        const rosterBoardH = 350;
+        const rosterCenterY = height * 0.52;
 
-        const rosterBoardBg = this.add.rectangle(width / 2, rosterCenterY, rosterBoardW, rosterBoardH, 0x120E16, 0.88).setDepth(5);
-        rosterBoardBg.setStrokeStyle(1.5, 0x785338, 0.85);
+        const rosterBoardBg = this.add.rectangle(width / 2, rosterCenterY, rosterBoardW, rosterBoardH, 0x120E16, 0.9).setDepth(5);
+        rosterBoardBg.setStrokeStyle(1.8, 0x785338, 0.9);
 
         // Center vertical divider
-        const divider = this.add.rectangle(width / 2, rosterCenterY, 1.5, rosterBoardH - 24, 0x3D322A, 0.8).setDepth(6);
+        const divider = this.add.rectangle(width / 2, rosterCenterY, 2, rosterBoardH - 24, 0x3D322A, 0.9).setDepth(6);
 
         // Player slots layout (2 columns of 5, centered)
         this.playerSlots = [];
-        const slotW = 345;
-        const slotH = 46;
-        const gapY = 52;
-        const startY = rosterCenterY - 104;
+        const slotW = 416;
+        const slotH = 50;
+        const gapY = 58;
+        const startY = rosterCenterY - 116;
 
         for (let i = 0; i < CONFIG.TOTAL_PLAYERS; i++) {
             const col = i < 5 ? 0 : 1;
             const row = i % 5;
-            const slotX = width / 2 + (col === 0 ? -188 : 188);
+            const slotX = width / 2 + (col === 0 ? -224 : 224);
             const slotY = startY + row * gapY;
 
             const slot = this.createPlayerSlot(slotX, slotY, i + 1, slotW, slotH);
@@ -103,26 +103,26 @@ export default class LobbyScene extends Phaser.Scene {
         }
 
         // 6. Bottom Info & Status Bar
-        this.playerCountText = this.add.text(width / 2, height - 76, '0 / 10 PLAYERS JOINED', {
+        this.playerCountText = this.add.text(width / 2, height - 80, '0 / 10 VILLAGERS ASSEMBLED', {
             fontFamily: 'DogicaBold, Dogica, monospace',
-            fontSize: '11px',
+            fontSize: '12.5px',
             color: '#E2D5C3',
             letterSpacing: 1
         }).setOrigin(0.5).setDepth(10);
 
         // 7. Host Start Game & Leave Action Buttons
         if (this.isHost) {
-            this.startButton = this.createActionButton(width / 2 + 70, height - 36, '▶ START GAME', 0x15803D, () => {
+            this.startButton = this.createActionButton(width / 2 + 80, height - 36, '▶ START GAME', 0x15803D, () => {
                 this.startGame();
-            }, 240);
+            }, 260);
             this.startButton.container.setAlpha(0.5);
-            this.leaveButton = this.createActionButton(width / 2 - 130, height - 36, '← LEAVE', 0x374151, () => {
+            this.leaveButton = this.createActionButton(width / 2 - 150, height - 36, '← LEAVE', 0x374151, () => {
                 this.scene.start('MenuScene');
-            }, 120);
+            }, 140);
         } else {
             this.leaveButton = this.createActionButton(width / 2, height - 36, '← LEAVE LOBBY', 0x374151, () => {
                 this.scene.start('MenuScene');
-            }, 180);
+            }, 200);
         }
 
         // Connect to server event bus
@@ -182,39 +182,39 @@ export default class LobbyScene extends Phaser.Scene {
         const container = this.add.container(x, y).setDepth(10);
 
         // Slot Background Card
-        const bg = this.add.rectangle(0, 0, w, h, 0x1A141A, 0.92);
+        const bg = this.add.rectangle(0, 0, w, h, 0x1A141A, 0.95);
         bg.setStrokeStyle(1.5, 0x3D322A, 0.85);
 
         // Slot Number Badge (e.g. "01")
-        const numBadgeBg = this.add.rectangle(-w / 2 + 18, 0, 24, 24, 0x231E1B);
+        const numBadgeBg = this.add.rectangle(-w / 2 + 22, 0, 28, 28, 0x231E1B);
         numBadgeBg.setStrokeStyle(1, 0x785338);
         const formattedNum = String(slotNumber).padStart(2, '0');
-        const numText = this.add.text(-w / 2 + 18, 0, formattedNum, {
-            fontFamily: 'Dogica, monospace',
-            fontSize: '8px',
+        const numText = this.add.text(-w / 2 + 22, 0, formattedNum, {
+            fontFamily: 'DogicaBold, monospace',
+            fontSize: '9.5px',
             color: '#E5B869'
         }).setOrigin(0.5);
 
         // Avatar Frame & Thumbnail Icon
-        const avatarFrame = this.add.rectangle(-w / 2 + 48, 0, 26, 26, 0x140F14, 1);
-        avatarFrame.setStrokeStyle(1, 0x785338, 0.8);
+        const avatarFrame = this.add.rectangle(-w / 2 + 56, 0, 30, 30, 0x140F14, 1);
+        avatarFrame.setStrokeStyle(1, 0x785338, 0.85);
 
-        const avatarSprite = this.add.sprite(-w / 2 + 48, 0, 'spr_avatar_01', 0).setScale(0.9);
+        const avatarSprite = this.add.sprite(-w / 2 + 56, 0, 'spr_avatar_01', 0).setScale(1.1);
 
         // Player Name Text
-        const nameText = this.add.text(-w / 2 + 70, 0, 'Waiting for player...', {
-            fontFamily: 'Dogica, monospace',
-            fontSize: '8.5px',
+        const nameText = this.add.text(-w / 2 + 82, 0, 'Waiting for player...', {
+            fontFamily: 'DogicaBold, monospace',
+            fontSize: '9.5px',
             color: '#78716C'
         }).setOrigin(0, 0.5);
 
         // Status Badge Pill (Ready / Host / Bot / Empty)
-        const statusPillBg = this.add.rectangle(w / 2 - 42, 0, 72, 22, 0x231E1B, 0.9);
+        const statusPillBg = this.add.rectangle(w / 2 - 48, 0, 84, 26, 0x231E1B, 0.9);
         statusPillBg.setStrokeStyle(1, 0x3D322A, 0.8);
 
-        const readyBadge = this.add.text(w / 2 - 42, 0, 'EMPTY', {
-            fontFamily: 'Dogica, monospace',
-            fontSize: '7px',
+        const readyBadge = this.add.text(w / 2 - 48, 0, 'EMPTY', {
+            fontFamily: 'DogicaBold, monospace',
+            fontSize: '8px',
             color: '#78716C'
         }).setOrigin(0.5);
 
@@ -264,115 +264,118 @@ export default class LobbyScene extends Phaser.Scene {
         this.updatePlayerCount();
     }
 
-    connectToServer() {
-        import('../utils/EventBus.js').then(({ gameEvents }) => {
-            gameEvents.on('lobby:roomCreated', (data) => this.handleRoomCreated(data));
-            gameEvents.on('lobby:roomJoined', (data) => this.handleRoomJoined(data));
-
-            gameEvents.on('lobby:playerJoined', (data) => {
-                const idx = this.players.length;
-                this.updatePlayerSlot(idx, { displayName: data.playerName, isReady: true, avatarId: data.avatarId });
-                this.players.push(data.playerId);
-                this.updatePlayerCount();
+    handlePlayerJoined(data) {
+        const slotIdx = this.players.length;
+        if (slotIdx < CONFIG.TOTAL_PLAYERS) {
+            this.players.push(data.playerId);
+            this.updatePlayerSlot(slotIdx, {
+                displayName: data.name,
+                isHost: slotIdx === 0,
+                isReady: false,
+                isBot: data.isBot,
+                avatarId: data.avatarId
             });
+            this.updatePlayerCount();
+        }
+    }
 
-            gameEvents.on('game:starting', () => {
-                this.scene.start('CharacterSelectScene');
-            });
-        });
+    handlePlayerLeft(data) {
+        const idx = this.players.indexOf(data.playerId);
+        if (idx !== -1) {
+            this.players.splice(idx, 1);
+            this.clearPlayerSlot(this.players.length);
+            this.updatePlayerCount();
+        }
+    }
+
+    updatePlayerSlot(index, info) {
+        if (index >= this.playerSlots.length) return;
+        const slot = this.playerSlots[index];
+
+        slot.occupied = true;
+        slot.bg.setStrokeStyle(1.5, info.isHost ? 0xF59E0B : 0x785338, 0.95);
+
+        let dName = info.displayName || `Player ${index + 1}`;
+        if (dName.length > 14) dName = dName.substring(0, 12) + '..';
+
+        slot.nameText.setText(dName);
+        slot.nameText.setColor(info.isHost ? '#F59E0B' : '#FFF8EE');
+
+        if (info.avatarId && this.textures.exists(`spr_avatar_${info.avatarId}`)) {
+            slot.avatarSprite.setTexture(`spr_avatar_${info.avatarId}`, 0);
+        }
+
+        if (info.isHost) {
+            slot.statusPillBg.setFillStyle(0x451A03, 0.95);
+            slot.statusPillBg.setStrokeStyle(1.2, 0xF59E0B, 0.9);
+            slot.readyBadge.setText('👑 HOST');
+            slot.readyBadge.setColor('#F59E0B');
+        } else if (info.isBot) {
+            slot.statusPillBg.setFillStyle(0x1F2937, 0.95);
+            slot.statusPillBg.setStrokeStyle(1.2, 0x4B5563, 0.9);
+            slot.readyBadge.setText('🤖 BOT');
+            slot.readyBadge.setColor('#9CA3AF');
+        } else if (info.isReady) {
+            slot.statusPillBg.setFillStyle(0x064E3B, 0.95);
+            slot.statusPillBg.setStrokeStyle(1.2, 0x10B981, 0.9);
+            slot.readyBadge.setText('✓ READY');
+            slot.readyBadge.setColor('#4ADE80');
+        } else {
+            slot.statusPillBg.setFillStyle(0x231E1B, 0.9);
+            slot.statusPillBg.setStrokeStyle(1.2, 0x3D322A, 0.8);
+            slot.readyBadge.setText('WAITING');
+            slot.readyBadge.setColor('#A89F91');
+        }
+    }
+
+    clearPlayerSlot(index) {
+        if (index >= this.playerSlots.length) return;
+        const slot = this.playerSlots[index];
+        slot.occupied = false;
+        slot.bg.setStrokeStyle(1.5, 0x3D322A, 0.85);
+        slot.nameText.setText('Waiting for player...').setColor('#78716C');
+        slot.avatarSprite.setTexture('spr_avatar_01', 0);
+        slot.statusPillBg.setFillStyle(0x231E1B, 0.9);
+        slot.statusPillBg.setStrokeStyle(1, 0x3D322A, 0.8);
+        slot.readyBadge.setText('EMPTY').setColor('#78716C');
     }
 
     updatePlayerCount() {
-        const total = this.players.length;
-        this.playerCountText.setText(`${total} / 10 VILLAGERS ASSEMBLED`);
-        this.playerCountText.setColor(total >= 10 ? '#4ADE80' : '#E2D5C3');
+        const count = this.players.length;
+        this.playerCountText.setText(`${count} / ${CONFIG.TOTAL_PLAYERS} VILLAGERS ASSEMBLED`);
 
         if (this.isHost && this.startButton) {
-            this.startButton.container.setAlpha(1);
-            if (!this.pulseTween) {
-                this.pulseTween = this.tweens.add({
-                    targets: this.startButton.bg,
-                    scaleX: 1.03,
-                    scaleY: 1.04,
-                    yoyo: true,
-                    repeat: -1,
-                    duration: 700
-                });
+            if (count >= 2 || this.isCustom) {
+                this.startButton.container.setAlpha(1.0);
+            } else {
+                this.startButton.container.setAlpha(0.5);
             }
         }
     }
 
-    updatePlayerSlot(slotIndex, playerData) {
-        if (slotIndex >= this.playerSlots.length) return;
-        const slot = this.playerSlots[slotIndex];
-
-        let displayName = playerData.displayName || `Villager ${slotIndex + 1}`;
-        if (displayName.length > 14) displayName = displayName.substring(0, 13) + '…';
-
-        slot.nameText.setText(displayName);
-
-        if (playerData.avatarId && this.textures.exists(`spr_avatar_${playerData.avatarId}`)) {
-            slot.avatarSprite.setTexture(`spr_avatar_${playerData.avatarId}`, 0);
-        }
-
-        if (playerData.isHost) {
-            slot.nameText.setColor('#F59E0B');
-            slot.statusPillBg.setFillStyle(0x451A03, 0.95);
-            slot.statusPillBg.setStrokeStyle(1.2, 0xF59E0B, 1);
-            slot.readyBadge.setText('👑 HOST').setColor('#F59E0B');
-            slot.bg.setStrokeStyle(1.8, 0xF59E0B, 0.9);
-            slot.numBadgeBg.setFillStyle(0x451A03);
-            slot.numBadgeBg.setStrokeStyle(1, 0xF59E0B);
-        } else if (playerData.isBot) {
-            slot.nameText.setColor('#E2D5C3');
-            slot.statusPillBg.setFillStyle(0x1E293B, 0.95);
-            slot.statusPillBg.setStrokeStyle(1, 0x64748B, 0.8);
-            slot.readyBadge.setText('🤖 BOT').setColor('#94A3B8');
-            slot.bg.setStrokeStyle(1.2, 0x3D322A, 0.8);
-            slot.numBadgeBg.setFillStyle(0x181311);
-        } else {
-            slot.nameText.setColor('#FFFFFF');
-            slot.statusPillBg.setFillStyle(0x064E3B, 0.95);
-            slot.statusPillBg.setStrokeStyle(1.2, 0x10B981, 1);
-            slot.readyBadge.setText('✓ READY').setColor('#4ADE80');
-            slot.bg.setStrokeStyle(1.2, 0x10B981, 0.8);
-            slot.numBadgeBg.setFillStyle(0x064E3B);
-        }
-
-        slot.avatarSprite.setAlpha(1);
-        slot.occupied = true;
-    }
-
-    startGame() {
-        if (this.players.length < 1 && !this.isCustom) return;
-        window.socketClient.send({ type: 'START_GAME' });
-    }
-
-    createActionButton(x, y, text, colorHex, callback, widthOverride = 220) {
+    createActionButton(x, y, text, colorHex, callback, btnW = 220) {
         const container = this.add.container(x, y).setDepth(20);
 
-        const bg = this.add.rectangle(0, 0, widthOverride, 44, colorHex, 0.92);
-        bg.setStrokeStyle(1.8, 0xF59E0B, 0.85);
+        const bg = this.add.rectangle(0, 0, btnW, 46, colorHex, 0.95);
+        bg.setStrokeStyle(1.8, 0xFFFFFF, 0.35);
         bg.setInteractive({ useHandCursor: true });
 
         const label = this.add.text(0, 0, text, {
             fontFamily: 'DogicaBold, Dogica, monospace',
-            fontSize: '9.5px',
+            fontSize: '11px',
             color: '#FFFFFF',
-            letterSpacing: 1
+            letterSpacing: 0.5
         }).setOrigin(0.5);
 
         container.add([bg, label]);
 
         bg.on('pointerover', () => {
             bg.setFillStyle(Phaser.Display.Color.ValueToColor(colorHex).lighten(15).color);
-            bg.setStrokeStyle(2, 0xFBBF24, 1);
             this.tweens.add({ targets: container, scaleX: 1.04, scaleY: 1.04, duration: 100 });
         });
 
         bg.on('pointerout', () => {
             bg.setFillStyle(colorHex);
-            bg.setStrokeStyle(1.8, 0xF59E0B, 0.85);
             this.tweens.add({ targets: container, scaleX: 1.0, scaleY: 1.0, duration: 100 });
         });
 
@@ -386,19 +389,38 @@ export default class LobbyScene extends Phaser.Scene {
         return { container, bg, label };
     }
 
-    update(time) {
+    startGame() {
+        if (window.socketClient) {
+            window.socketClient.send({ type: 'START_GAME' });
+        }
+    }
+
+    connectToServer() {
+        import('../utils/EventBus.js').then(({ gameEvents }) => {
+            gameEvents.off('room:playerJoined');
+            gameEvents.off('room:playerLeft');
+            gameEvents.off('game:started');
+
+            gameEvents.on('room:playerJoined', (data) => this.handlePlayerJoined(data));
+            gameEvents.on('room:playerLeft', (data) => this.handlePlayerLeft(data));
+            gameEvents.on('game:started', () => {
+                this.scene.start('CharacterSelectScene', {
+                    isHost: this.isHost,
+                    isCustom: this.isCustom,
+                    roomCode: this.roomCode
+                });
+            });
+        });
+    }
+
+    update(time, delta) {
         if (this.embers) {
-            const height = this.cameras.main.height;
-            const width = this.cameras.main.width;
-
-            this.embers.forEach(p => {
-                p.shape.y += p.speedY;
-                p.shape.x = p.baseX + Math.sin(time * p.swaySpeed + p.offset) * 10;
-
-                if (p.shape.y < -15) {
-                    p.shape.y = height + 15;
-                    p.baseX = Phaser.Math.Between(10, width - 10);
-                    p.shape.x = p.baseX;
+            this.embers.forEach(e => {
+                e.shape.y += e.speedY;
+                e.shape.x = e.baseX + Math.sin(time * e.swaySpeed + e.offset) * 16;
+                if (e.shape.y < -10) {
+                    e.shape.y = this.cameras.main.height + 15;
+                    e.baseX = Phaser.Math.Between(10, this.cameras.main.width - 10);
                 }
             });
         }
