@@ -380,12 +380,25 @@ export default class CharacterSelectScene extends Phaser.Scene {
 
         if (window.socketClient) {
             window.socketClient.send({ type: 'CHARACTER_SELECTED', avatarId: this.selectedAvatar });
+            window.socketClient.send({ type: 'START_EARLY' });
         }
 
         this.confirmButtonBg.setFillStyle(0x064E3B, 1);
         this.confirmButtonBg.setStrokeStyle(2, 0x10B981, 1);
-        this.confirmButtonText.setText('✓ SELECTION LOCKED');
+        this.confirmButtonText.setText('✓ ENTERING GAME...');
         this.confirmButtonBg.removeInteractive();
+
+        // Guaranteed transition fallback: Transition into GameScene after 800ms if server message has not already triggered it
+        this.time.delayedCall(800, () => {
+            if (this.scene.isActive('CharacterSelectScene')) {
+                const roomData = window.socketClient ? window.socketClient.currentRoom : null;
+                this.scene.start('GameScene', {
+                    avatarId: this.selectedAvatar || '01',
+                    playerId: roomData ? roomData.playerId : 'local_player',
+                    players: roomData ? roomData.players : []
+                });
+            }
+        });
     }
 
     update(time) {
