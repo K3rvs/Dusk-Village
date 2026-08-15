@@ -397,19 +397,28 @@ export default class LobbyScene extends Phaser.Scene {
 
     connectToServer() {
         import('../utils/EventBus.js').then(({ gameEvents }) => {
-            gameEvents.off('room:playerJoined');
-            gameEvents.off('room:playerLeft');
+            gameEvents.off('lobby:roomCreated');
+            gameEvents.off('lobby:roomJoined');
+            gameEvents.off('lobby:playerJoined');
+            gameEvents.off('lobby:playerLeft');
+            gameEvents.off('game:starting');
             gameEvents.off('game:started');
 
-            gameEvents.on('room:playerJoined', (data) => this.handlePlayerJoined(data));
-            gameEvents.on('room:playerLeft', (data) => this.handlePlayerLeft(data));
-            gameEvents.on('game:started', () => {
+            gameEvents.on('lobby:roomCreated', (data) => this.handleRoomCreated(data));
+            gameEvents.on('lobby:roomJoined', (data) => this.handleRoomJoined(data));
+            gameEvents.on('lobby:playerJoined', (data) => this.handlePlayerJoined(data));
+            gameEvents.on('lobby:playerLeft', (data) => this.handlePlayerLeft(data));
+            
+            const startCharSelect = () => {
                 this.scene.start('CharacterSelectScene', {
                     isHost: this.isHost,
                     isCustom: this.isCustom,
                     roomCode: this.roomCode
                 });
-            });
+            };
+
+            gameEvents.on('game:starting', startCharSelect);
+            gameEvents.on('game:started', startCharSelect);
         });
     }
 
