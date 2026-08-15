@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dusk Village - Site Plan & Interior Layout Editor</title>
+    <title>Dusk Village - Map & Interior Layout Editor</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@500;700;800&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -19,7 +19,8 @@
 
         /* Sidebar Panel */
         #sidebar {
-            width: 350px;
+            width: 400px;
+            min-width: 400px;
             background: #1E293B;
             border-right: 2px solid #334155;
             padding: 16px;
@@ -95,8 +96,38 @@
             gap: 6px;
         }
 
+        .category-tabs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            margin-bottom: 4px;
+        }
+
+        .tab-btn {
+            padding: 5px 8px;
+            background: #0F172A;
+            border: 1px solid #334155;
+            color: #94A3B8;
+            font-size: 10px;
+            font-weight: 700;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .tab-btn:hover {
+            color: #F8FAFC;
+            border-color: #38BDF8;
+        }
+
+        .tab-btn.active {
+            background: #38BDF8;
+            color: #0F172A;
+            border-color: #38BDF8;
+        }
+
         .btn-tool {
-            padding: 7px 8px;
+            padding: 6px 8px;
             background: #0F172A;
             border: 1.5px solid #334155;
             color: #CBD5E1;
@@ -109,6 +140,10 @@
             align-items: center;
             gap: 6px;
             transition: all 0.15s ease;
+            user-select: none;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
 
         .btn-tool:hover {
@@ -146,7 +181,7 @@
             padding: 0 20px;
             position: absolute;
             top: 0;
-            left: 350px;
+            left: 400px;
             right: 0;
             z-index: 5;
         }
@@ -160,6 +195,10 @@
             padding: 6px 12px;
             border-radius: 6px;
             border: 1px solid #334155;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 480px;
         }
 
         .top-controls {
@@ -254,12 +293,39 @@
             <span class="map-mode-label">Editing Map Layer:</span>
             <select id="map-mode-select" class="map-select" onchange="switchMapMode(this.value)">
                 <option value="village_exterior">🗺️ Village Exterior (94×70)</option>
-                <option value="interior_villagehall">🏛️ Interior: Village Hall (15×10)</option>
-                <option value="interior_clinic">🏥 Interior: Clinic (15×10)</option>
-                <option value="interior_library">📚 Interior: Library (15×10)</option>
-                <option value="interior_school">🏫 Interior: School (15×10)</option>
-                <option value="interior_house">🏠 Interior: Cottage House (15×10)</option>
+                <option value="interior_villagehall">🏛️ Interior: Village Hall (23×15)</option>
+                <option value="interior_clinic">🏥 Interior: Clinic (23×15)</option>
+                <option value="interior_library">📚 Interior: Library (23×15)</option>
+                <option value="interior_school">🏫 Interior: School (23×15)</option>
+                <option value="interior_house">🏠 Interior: Cottage House (23×15)</option>
+                <option value="interior_local_house">🏡 Interior: Local House (23×15)</option>
             </select>
+        </div>
+
+        <!-- Room Dimension Expansion Controls (50% Expanded Inner Layouts) -->
+        <div id="room-expansion-panel" class="map-mode-box" style="display:none; border-color:#F59E0B;">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <span class="map-mode-label" style="color:#F59E0B;">📐 Inner Layout Expansion (+50%)</span>
+                <span id="current-room-dim-badge" style="font-size:11px; font-weight:700; color:#38BDF8;">23 × 15</span>
+            </div>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:6px; margin-top:4px;">
+                <div>
+                    <label style="font-size:10px; color:#94A3B8; font-weight:700;">WIDTH (TILES):</label>
+                    <input id="room-width-input" type="number" min="8" max="70" value="23" style="width:100%; padding:5px 8px; background:#1E293B; border:1px solid #475569; border-radius:4px; color:#FFF; font-weight:bold; font-size:12px;">
+                </div>
+                <div>
+                    <label style="font-size:10px; color:#94A3B8; font-weight:700;">HEIGHT (TILES):</label>
+                    <input id="room-height-input" type="number" min="6" max="60" value="15" style="width:100%; padding:5px 8px; background:#1E293B; border:1px solid #475569; border-radius:4px; color:#FFF; font-weight:bold; font-size:12px;">
+                </div>
+            </div>
+            <!-- Quick Presets (+50% Expanded) -->
+            <div style="display:flex; gap:4px; margin-top:6px;">
+                <button class="btn-top" style="flex:1; padding:4px 2px; font-size:10px;" onclick="applyPresetRoomSize(23, 15)">23×15 Std</button>
+                <button class="btn-top" style="flex:1; padding:4px 2px; font-size:10px;" onclick="applyPresetRoomSize(28, 18)">28×18 Mid</button>
+                <button class="btn-top" style="flex:1; padding:4px 2px; font-size:10px;" onclick="applyPresetRoomSize(32, 22)">32×22 Grand</button>
+                <button class="btn-top" style="flex:1; padding:4px 2px; font-size:10px;" onclick="applyPresetRoomSize(36, 24)">36×24 Manor</button>
+            </div>
+            <button class="action-btn" style="background:#F59E0B; color:#0F172A; margin-top:6px; font-weight:800;" onclick="resizeInnerRoom()">📐 APPLY / EXPAND ROOM SIZE</button>
         </div>
 
         <!-- Universal Editor Tools -->
@@ -284,17 +350,31 @@
                 <button class="btn-tool" id="tool-water" onclick="selectTool('water')">🟦 Water Stream (4)</button>
             </div>
 
-            <div class="section-title">Civic Buildings & Hub</div>
+            <div class="section-title">Civic & Local Buildings</div>
             <div class="palette-group">
                 <button class="btn-tool" id="tool-hall" onclick="selectTool('hall')">🏛️ Village Hall (7x7)</button>
                 <button class="btn-tool" id="tool-clinic" onclick="selectTool('clinic')">🏥 Clinic (7x7)</button>
                 <button class="btn-tool" id="tool-library" onclick="selectTool('library')">📚 Library (7x7)</button>
                 <button class="btn-tool" id="tool-school" onclick="selectTool('school')">🏫 School (7x7)</button>
+                <button class="btn-tool" id="tool-local_house" onclick="selectTool('local_house')" style="border-color:#F59E0B; color:#FCD34D;">🏡 Local House (7x7)</button>
                 <button class="btn-tool" id="tool-statue" onclick="selectTool('statue')">🗿 Angel Statue (3x7)</button>
-                <button class="btn-tool" id="tool-fountain" onclick="selectTool('fountain')">⛲ Fountain (3x3)</button>
+                <button class="btn-tool" id="tool-fountain" onclick="selectTool('fountain')">⛲ Fountain (5x5)</button>
             </div>
 
-            <div class="section-title">Trees, Bushes & Props</div>
+            <div class="section-title">Outdoor Market & Decor Props</div>
+            <div class="palette-group">
+                <button class="btn-tool" id="tool-mkt_stand_1" onclick="selectTool('mkt_stand_1')">🍎 Market Stand 1</button>
+                <button class="btn-tool" id="tool-mkt_stand_2" onclick="selectTool('mkt_stand_2')">🍞 Market Stand 2</button>
+                <button class="btn-tool" id="tool-mkt_stand_3" onclick="selectTool('mkt_stand_3')">🐟 Market Stand 3</button>
+                <button class="btn-tool" id="tool-mkt_stand_4" onclick="selectTool('mkt_stand_4')">🧵 Market Stand 4</button>
+                <button class="btn-tool" id="tool-mkt_stand_5" onclick="selectTool('mkt_stand_5')">⛺ Market Stand 5</button>
+                <button class="btn-tool" id="tool-mkt_cart" onclick="selectTool('mkt_cart')">🛒 Vendor Cart</button>
+                <button class="btn-tool" id="tool-mkt_picnic" onclick="selectTool('mkt_picnic')">🧺 Picnic Table</button>
+                <button class="btn-tool" id="tool-mkt_sign" onclick="selectTool('mkt_sign')">🪧 Sign Post</button>
+                <button class="btn-tool" id="tool-mkt_flower_bed" onclick="selectTool('mkt_flower_bed')">🌸 Flower Bed</button>
+            </div>
+
+            <div class="section-title">Trees, Bushes & Nature</div>
             <div class="palette-group">
                 <button class="btn-tool" id="tool-oak" onclick="selectTool('oak')">🌳 Golden Oak (1x1)</button>
                 <button class="btn-tool" id="tool-maple" onclick="selectTool('maple')">🍁 Crimson Maple (1x1)</button>
@@ -335,21 +415,79 @@
                 <button class="btn-tool" id="tool-wall_slate" onclick="selectTool('wall_slate')">🧱 Wall Border (10)</button>
             </div>
 
-            <div class="section-title">Stations, Furniture & Props</div>
-            <div class="palette-group">
-                <button class="btn-tool" id="tool-prop_bookshelf" onclick="selectTool('prop_bookshelf')">📚 Bookshelf (3x3)</button>
-                <button class="btn-tool" id="tool-prop_db_terminal" onclick="selectTool('prop_db_terminal')">💻 Terminal (2x2)</button>
-                <button class="btn-tool" id="tool-prop_verify_podium" onclick="selectTool('prop_verify_podium')">🔍 Podium (3x2)</button>
-                <button class="btn-tool" id="tool-prop_council_table" onclick="selectTool('prop_council_table')">🏛️ Council Table (4x2)</button>
-                <button class="btn-tool" id="tool-prop_lectern" onclick="selectTool('prop_lectern')">🪑 Lectern Desk (2x2)</button>
-                <button class="btn-tool" id="tool-prop_school_desk" onclick="selectTool('prop_school_desk')">🏫 School Desk (1x1)</button>
-                <button class="btn-tool" id="tool-prop_chalkboard" onclick="selectTool('prop_chalkboard')">🎓 Chalkboard (2x2)</button>
-                <button class="btn-tool" id="tool-prop_medicine_cabinet" onclick="selectTool('prop_medicine_cabinet')">💊 Med Shelf (2x2)</button>
-                <button class="btn-tool" id="tool-prop_exam_table" onclick="selectTool('prop_exam_table')">🩺 Exam Table (2x1)</button>
-                <button class="btn-tool" id="tool-prop_cottage_bed" onclick="selectTool('prop_cottage_bed')">🛏️ Bed (2x2)</button>
-                <button class="btn-tool" id="tool-prop_filing_cabinet" onclick="selectTool('prop_filing_cabinet')">📁 Cabinet (1x2)</button>
-                <button class="btn-tool" id="tool-prop_notice_board" onclick="selectTool('prop_notice_board')">📜 Notice Board (2x2)</button>
-                <button class="btn-tool" id="tool-prop_barrels_crates" onclick="selectTool('prop_barrels_crates')">📦 Crates (2x2)</button>
+            <div class="section-title">Furniture & Props Categories</div>
+            <div class="category-tabs">
+                <button class="tab-btn active" id="tab-btn-living" onclick="switchPropTab('living')">🛋️ Living</button>
+                <button class="tab-btn" id="tab-btn-clinic" onclick="switchPropTab('clinic')">🏥 Clinic</button>
+                <button class="tab-btn" id="tab-btn-hall" onclick="switchPropTab('hall')">🏛️ Civic</button>
+                <button class="tab-btn" id="tab-btn-library" onclick="switchPropTab('library')">📚 Library</button>
+                <button class="tab-btn" id="tab-btn-school" onclick="switchPropTab('school')">🏫 School</button>
+                <button class="tab-btn" id="tab-btn-market" onclick="switchPropTab('market')">🏪 Market</button>
+            </div>
+
+            <!-- Tab 1: Living & Bedroom -->
+            <div id="tab-content-living" class="palette-group prop-category-group">
+                <button class="btn-tool" id="tool-prop_bed" onclick="selectTool('prop_bed')">🛏️ Bed (3x3)</button>
+                <button class="btn-tool" id="tool-prop_bedside" onclick="selectTool('prop_bedside')">🕯️ Bedside Table (2x3)</button>
+                <button class="btn-tool" id="tool-prop_sofa" onclick="selectTool('prop_sofa')">🛋️ Sofa (5x3)</button>
+                <button class="btn-tool" id="tool-prop_sofa_chair" onclick="selectTool('prop_sofa_chair')">🪑 Sofa Chair (2x3)</button>
+                <button class="btn-tool" id="tool-prop_comfy_chair" onclick="selectTool('prop_comfy_chair')">🪑 Comfy Chair (4x4)</button>
+                <button class="btn-tool" id="tool-prop_fireplace" onclick="selectTool('prop_fireplace')">🔥 Fireplace (4x4)</button>
+                <button class="btn-tool" id="tool-prop_tv_set" onclick="selectTool('prop_tv_set')">📺 TV Set (5x3)</button>
+                <button class="btn-tool" id="tool-prop_dining_table" onclick="selectTool('prop_dining_table')">🍽️ Dining Table (3x2)</button>
+                <button class="btn-tool" id="tool-prop_small_table" onclick="selectTool('prop_small_table')">☕ Small Table (3x2)</button>
+                <button class="btn-tool" id="tool-prop_carpet" onclick="selectTool('prop_carpet')">🧶 Carpet Rug (5x3)</button>
+                <button class="btn-tool" id="tool-prop_flower_bed" onclick="selectTool('prop_flower_bed')">🪴 Flower Bed (4x4)</button>
+            </div>
+
+            <!-- Tab 2: Clinic & Medical -->
+            <div id="tab-content-clinic" class="palette-group prop-category-group" style="display:none;">
+                <button class="btn-tool" id="tool-prop_clinic_bed" onclick="selectTool('prop_clinic_bed')">🛏️ Clinic Bed (6x4)</button>
+                <button class="btn-tool" id="tool-prop_clinic_cab" onclick="selectTool('prop_clinic_cab')">🗄️ Clinic Cabinet (6x4)</button>
+                <button class="btn-tool" id="tool-prop_clinic_cab_wd" onclick="selectTool('prop_clinic_cab_wd')">🚪 Wood Cabinet (5x4)</button>
+                <button class="btn-tool" id="tool-prop_clinic_desk" onclick="selectTool('prop_clinic_desk')">✍️ Doctor Desk 1 (6x4)</button>
+                <button class="btn-tool" id="tool-prop_clinic_desk_2" onclick="selectTool('prop_clinic_desk_2')">✍️ Doctor Desk 2 (5x4)</button>
+                <button class="btn-tool" id="tool-prop_clinic_mach" onclick="selectTool('prop_clinic_mach')">🔬 Medical Machine (4x4)</button>
+                <button class="btn-tool" id="tool-prop_clinic_sofa" onclick="selectTool('prop_clinic_sofa')">🛋️ Waiting Sofa (5x3)</button>
+            </div>
+
+            <!-- Tab 3: Town Hall & Civic -->
+            <div id="tab-content-hall" class="palette-group prop-category-group" style="display:none;">
+                <button class="btn-tool" id="tool-prop_hall_table" onclick="selectTool('prop_hall_table')">🏛️ Hall Table (8x8)</button>
+                <button class="btn-tool" id="tool-prop_submit_table" onclick="selectTool('prop_submit_table')">🏆 Clue Submit Table (8x6)</button>
+                <button class="btn-tool" id="tool-prop_podium" onclick="selectTool('prop_podium')">🎤 Mayor Podium (2x3)</button>
+            </div>
+
+            <!-- Tab 4: Library & Archives -->
+            <div id="tab-content-library" class="palette-group prop-category-group" style="display:none;">
+                <button class="btn-tool" id="tool-prop_large_bookshelf" onclick="selectTool('prop_large_bookshelf')">📚 Tall Bookshelf (5x3)</button>
+                <button class="btn-tool" id="tool-prop_small_bookshelf" onclick="selectTool('prop_small_bookshelf')">📖 Small Bookshelf (3x4)</button>
+                <button class="btn-tool" id="tool-prop_library_desk" onclick="selectTool('prop_library_desk')">✍️ Study Desk (5x3)</button>
+                <button class="btn-tool" id="tool-prop_book_cart" onclick="selectTool('prop_book_cart')">🛒 Book Cart (3x3)</button>
+                <button class="btn-tool" id="tool-prop_podium_frag" onclick="selectTool('prop_podium_frag')">🔍 Checking Podium (2x3)</button>
+                <button class="btn-tool" id="tool-prop_printer" onclick="selectTool('prop_printer')">🖨️ Document Printer (3x3)</button>
+            </div>
+
+            <!-- Tab 5: School & Academy -->
+            <div id="tab-content-school" class="palette-group prop-category-group" style="display:none;">
+                <button class="btn-tool" id="tool-prop_chalk_board" onclick="selectTool('prop_chalk_board')">🎓 Chalkboard (9x5)</button>
+                <button class="btn-tool" id="tool-prop_teacher_table" onclick="selectTool('prop_teacher_table')">👨‍🏫 Teacher Desk (8x6)</button>
+                <button class="btn-tool" id="tool-prop_students_table" onclick="selectTool('prop_students_table')">🏫 Student Desk (7x6)</button>
+                <button class="btn-tool" id="tool-prop_student_locker" onclick="selectTool('prop_student_locker')">🚪 Lockers (8x7)</button>
+                <button class="btn-tool" id="tool-prop_school_bookshelf" onclick="selectTool('prop_school_bookshelf')">📚 Class Bookshelf (6x8)</button>
+                <button class="btn-tool" id="tool-prop_science_table" onclick="selectTool('prop_science_table')">🧪 Science Bench (11x6)</button>
+            </div>
+
+            <!-- Tab 6: Marketplace & Outdoor -->
+            <div id="tab-content-market" class="palette-group prop-category-group" style="display:none;">
+                <button class="btn-tool" id="tool-prop_mkt_1" onclick="selectTool('prop_mkt_1')">🍎 Market Stand 1 (9x8)</button>
+                <button class="btn-tool" id="tool-prop_mkt_2" onclick="selectTool('prop_mkt_2')">🍞 Market Stand 2 (7x8)</button>
+                <button class="btn-tool" id="tool-prop_mkt_3" onclick="selectTool('prop_mkt_3')">🐟 Market Stand 3 (8x8)</button>
+                <button class="btn-tool" id="tool-prop_mkt_4" onclick="selectTool('prop_mkt_4')">🧵 Market Stand 4 (8x8)</button>
+                <button class="btn-tool" id="tool-prop_mkt_5" onclick="selectTool('prop_mkt_5')">⛺ Market Stand 5 (4x4)</button>
+                <button class="btn-tool" id="tool-prop_cart" onclick="selectTool('prop_cart')">🛒 Cart (3x3)</button>
+                <button class="btn-tool" id="tool-prop_picnic" onclick="selectTool('prop_picnic')">🧺 Picnic Table (4x4)</button>
+                <button class="btn-tool" id="tool-prop_sign" onclick="selectTool('prop_sign')">🪧 Sign Post (3x4)</button>
             </div>
         </div>
 
@@ -426,20 +564,27 @@
         let historyStack = [];
         let redoStack = [];
 
+        // Isolated per-layer state cache preventing cross-layer corruption
+        const mapLayersCache = {};
+
         // Image Cache
         const images = {};
         const grassTexture = new Image();
         grassTexture.src = '/assets/sprites/terrain/tile_ground_grass_01.png';
         grassTexture.onload = () => renderMap();
 
-        // Structure Asset Registry
+        // Structure & Individual Prop Registry
         const STRUCTURES = {
+            // === Exterior Buildings (7x7 Civic Buildings, 7x7 Local House) ===
             hall: { name: 'Village Hall', w: 7, h: 7, src: '/assets/sprites/buildings/sprite_building_villagehall.png', sx: 0, sy: 0, sw: 336, sh: 336 },
             clinic: { name: 'Clinic', w: 7, h: 7, src: '/assets/sprites/buildings/sprite_building_clinic.png', sx: 0, sy: 0, sw: 336, sh: 336 },
             library: { name: 'Library', w: 7, h: 7, src: '/assets/sprites/buildings/sprite_building_library.png', sx: 0, sy: 0, sw: 336, sh: 336 },
             school: { name: 'School', w: 7, h: 7, src: '/assets/sprites/buildings/sprite_building_school.png', sx: 0, sy: 0, sw: 336, sh: 336 },
+            local_house: { name: 'Local House (Unoccupied)', w: 7, h: 7, src: '/assets/sprites/buildings/sprite_building_local-house_01.png', sx: 0, sy: 0, sw: 196, sh: 198 },
             statue: { name: 'Angel Statue', w: 3, h: 7, src: '/assets/sprites/buildings/sprite_statue_angel.png', sx: 0, sy: 0, sw: 192, sh: 384 },
-            fountain: { name: 'Village Fountain', w: 3, h: 3, src: '/assets/sprites/buildings/sprite_fountain.png', sx: 0, sy: 0, sw: 183, sh: 153 },
+            fountain: { name: 'Village Fountain', w: 5, h: 5, src: '/assets/sprites/buildings/sprite_fountain.png', sx: 0, sy: 0, sw: 183, sh: 153 },
+            
+            // === Exterior Nature & Props ===
             oak: { name: 'Golden Oak Tree', w: 1, h: 1, src: '/assets/sprites/terrain/spr_tree_autumn_oak.png', sx: 0, sy: 0, sw: 32, sh: 48 },
             maple: { name: 'Crimson Maple Tree', w: 1, h: 1, src: '/assets/sprites/terrain/spr_tree_autumn_oak.png', sx: 32, sy: 0, sw: 32, sh: 48 },
             pine: { name: 'Evergreen Pine Tree', w: 1, h: 1, src: '/assets/sprites/terrain/sprite_tree_pine.png', sx: 0, sy: 0, sw: 192, sh: 384 },
@@ -447,24 +592,73 @@
             bush_rose: { name: 'Flowering Rose Bush', w: 1, h: 1, src: '/assets/sprites/terrain/sprite_bush_rose.png', sx: 0, sy: 0, sw: 384, sh: 288 },
             bush_gold: { name: 'Golden Marigold Bush', w: 1, h: 1, src: '/assets/sprites/terrain/spr_bush_circular.png', sx: 32, sy: 0, sw: 16, sh: 16 },
             bush_lg: { name: 'Large Round Bush', w: 1, h: 1, src: '/assets/sprites/terrain/spr_bush_circular.png', sx: 0, sy: 16, sw: 32, sh: 32 },
-            fence: { name: 'Picket Fence', w: 1, h: 1, src: '/assets/sprites/terrain/spr_fences_gates.png', sx: 0, sy: 0, sw: 16, sh: 16 },
-            mailbox: { name: 'Mailbox', w: 1, h: 1, src: '/assets/sprites/terrain/spr_mailboxes.png', sx: 0, sy: 0, sw: 16, sh: 16 },
+            fence: { name: 'Picket Fence', w: 1, h: 1, src: '/assets/sprites/terrain/prop_fence_picket.png', sx: 0, sy: 0, sw: 16, sh: 16 },
+            mailbox: { name: 'Mailbox', w: 1, h: 1, src: '/assets/sprites/buildings/spr_mailboxes.png', sx: 0, sy: 0, sw: 16, sh: 16 },
             leaves: { name: 'Autumn Leaves', w: 1, h: 1, src: '/assets/sprites/terrain/spr_foliage_bushes.png', sx: 32, sy: 0, sw: 16, sh: 16 },
 
-            // Interior Props & Stations
-            prop_council_table: { name: 'Town Records Table', w: 4, h: 2, src: '/assets/sprites/props/interior_props.png', sx: 0, sy: 0, sw: 64, sh: 24 },
-            prop_filing_cabinet: { name: 'Filing Cabinet', w: 1, h: 2, src: '/assets/sprites/props/interior_props.png', sx: 64, sy: 0, sw: 16, sh: 32 },
-            prop_lectern: { name: 'Lectern Desk', w: 2, h: 2, src: '/assets/sprites/props/interior_props.png', sx: 80, sy: 0, sw: 32, sh: 32 },
-            prop_verify_podium: { name: 'Verification Podium', w: 3, h: 2, src: '/assets/sprites/props/interior_props.png', sx: 0, sy: 32, sw: 48, sh: 32 },
-            prop_db_terminal: { name: 'Database Terminal', w: 2, h: 2, src: '/assets/sprites/props/interior_props.png', sx: 48, sy: 32, sw: 32, sh: 32 },
-            prop_bookshelf: { name: 'Bookshelf', w: 3, h: 3, src: '/assets/sprites/props/interior_props.png', sx: 80, sy: 32, sw: 48, sh: 48 },
-            prop_school_desk: { name: 'School Desk', w: 1, h: 1, src: '/assets/sprites/props/interior_props.png', sx: 0, sy: 80, sw: 16, sh: 16 },
-            prop_chalkboard: { name: 'Chalkboard', w: 2, h: 2, src: '/assets/sprites/props/interior_props.png', sx: 16, sy: 80, sw: 32, sh: 24 },
-            prop_medicine_cabinet: { name: 'Pharmacy Shelf', w: 2, h: 2, src: '/assets/sprites/props/interior_props.png', sx: 48, sy: 80, sw: 32, sh: 32 },
-            prop_exam_table: { name: 'Exam Table', w: 2, h: 1, src: '/assets/sprites/props/interior_props.png', sx: 80, sy: 80, sw: 32, sh: 16 },
-            prop_cottage_bed: { name: 'Cottage Bed', w: 2, h: 2, src: '/assets/sprites/props/interior_props.png', sx: 112, sy: 80, sw: 32, sh: 24 },
-            prop_notice_board: { name: 'Notice Board', w: 2, h: 2, src: '/assets/sprites/props/outdoor_props.png', sx: 32, sy: 32, sw: 32, sh: 32 },
-            prop_barrels_crates: { name: 'Barrels & Crates', w: 2, h: 2, src: '/assets/sprites/props/outdoor_props.png', sx: 0, sy: 64, sw: 32, sh: 32 }
+            // === 1. Living & Bedroom Props (New Assets) ===
+            prop_bed: { name: 'Cottage Bed', w: 3, h: 3, src: '/assets/sprites/props/marketplace/bed.png' },
+            prop_bedside: { name: 'Bedside Table', w: 2, h: 3, src: '/assets/sprites/props/marketplace/bedside table.png' },
+            prop_sofa: { name: 'Living Sofa', w: 5, h: 3, src: '/assets/sprites/props/marketplace/sofa.png' },
+            prop_sofa_chair: { name: 'Sofa Armchair', w: 2, h: 3, src: '/assets/sprites/props/marketplace/sofa chair.png' },
+            prop_comfy_chair: { name: 'Comfy Chair', w: 4, h: 4, src: '/assets/sprites/props/marketplace/comfy chair.png' },
+            prop_fireplace: { name: 'Brick Fireplace', w: 4, h: 4, src: '/assets/sprites/props/marketplace/fireplace.png' },
+            prop_tv_set: { name: 'TV Set & Stand', w: 5, h: 3, src: '/assets/sprites/props/marketplace/tv set.png' },
+            prop_dining_table: { name: 'Dining Table', w: 3, h: 2, src: '/assets/sprites/props/marketplace/dining table.png' },
+            prop_small_table: { name: 'Coffee Table', w: 3, h: 2, src: '/assets/sprites/props/marketplace/small table.png' },
+            prop_carpet: { name: 'Carpet Rug', w: 5, h: 3, src: '/assets/sprites/props/marketplace/carpet.png' },
+            prop_flower_bed: { name: 'Flower Pot Bed', w: 4, h: 4, src: '/assets/sprites/props/marketplace/flower bed.png' },
+
+            // === 2. Clinic & Medical Props (New Assets) ===
+            prop_clinic_bed: { name: 'Clinic Bed', w: 6, h: 4, src: '/assets/sprites/props/marketplace/clinic bed.png' },
+            prop_clinic_cab: { name: 'Clinic Cabinet', w: 6, h: 4, src: '/assets/sprites/props/marketplace/clinic cabinet.png' },
+            prop_clinic_cab_wd: { name: 'Wood Cabinet', w: 5, h: 4, src: '/assets/sprites/props/marketplace/clinic cabinet wood.png' },
+            prop_clinic_desk: { name: 'Doctor Desk 1', w: 6, h: 4, src: '/assets/sprites/props/marketplace/clinic desk.png' },
+            prop_clinic_desk_2: { name: 'Doctor Desk 2', w: 5, h: 4, src: '/assets/sprites/props/marketplace/clinic desk 2.png' },
+            prop_clinic_mach: { name: 'Medical Machine', w: 4, h: 4, src: '/assets/sprites/props/marketplace/clinic machine.png' },
+            prop_clinic_sofa: { name: 'Clinic Sofa', w: 5, h: 3, src: '/assets/sprites/props/marketplace/clinic sofa.png' },
+
+            // === 3. Town Hall & Civic Props (New Assets) ===
+            prop_hall_table: { name: 'Council Hall Table', w: 8, h: 8, src: '/assets/sprites/props/marketplace/hall table.png' },
+            prop_submit_table: { name: 'Clue Submission Table', w: 8, h: 6, src: '/assets/sprites/props/marketplace/table where you will submit the fragments.png' },
+            prop_podium: { name: 'Mayor Podium', w: 2, h: 3, src: '/assets/sprites/props/marketplace/podium.png' },
+
+            // === 4. Library & Archives Props (New Assets) ===
+            prop_large_bookshelf: { name: 'Tall Bookshelf', w: 5, h: 3, src: '/assets/sprites/props/marketplace/large bookshelf.png' },
+            prop_small_bookshelf: { name: 'Small Bookshelf', w: 3, h: 4, src: '/assets/sprites/props/marketplace/small bookshelf.png' },
+            prop_library_desk: { name: 'Library Study Desk', w: 5, h: 3, src: '/assets/sprites/props/marketplace/library desk.png' },
+            prop_book_cart: { name: 'Book Cart', w: 3, h: 3, src: '/assets/sprites/props/marketplace/book cart.png' },
+            prop_podium_frag: { name: 'Verification Podium', w: 2, h: 3, src: '/assets/sprites/props/marketplace/podium for fragment checking.png' },
+            prop_printer: { name: 'Document Printer', w: 3, h: 3, src: '/assets/sprites/props/marketplace/printer.png' },
+
+            // === 5. School & Academy Props (New Assets) ===
+            prop_chalk_board: { name: 'Classroom Chalkboard', w: 9, h: 5, src: '/assets/sprites/props/marketplace/chalk board.png' },
+            prop_teacher_table: { name: 'Teacher Desk', w: 8, h: 6, src: '/assets/sprites/props/marketplace/teacher table.png' },
+            prop_students_table: { name: 'Student Desk', w: 7, h: 6, src: '/assets/sprites/props/marketplace/students table.png' },
+            prop_student_locker: { name: 'Student Lockers', w: 8, h: 7, src: '/assets/sprites/props/marketplace/student locker.png' },
+            prop_school_bookshelf: { name: 'Class Bookshelf', w: 6, h: 8, src: '/assets/sprites/props/marketplace/school book shelf.png' },
+            prop_science_table: { name: 'Science Lab Bench', w: 11, h: 6, src: '/assets/sprites/props/marketplace/science table.png' },
+
+            // === 6. Marketplace & Outdoor Props (New Assets) ===
+            prop_mkt_1: { name: 'Market Stand 1', w: 9, h: 8, src: '/assets/sprites/props/marketplace/market stand 1.png' },
+            prop_mkt_2: { name: 'Market Stand 2', w: 7, h: 8, src: '/assets/sprites/props/marketplace/market stand 2.png' },
+            prop_mkt_3: { name: 'Market Stand 3', w: 8, h: 8, src: '/assets/sprites/props/marketplace/market stand 3.png' },
+            prop_mkt_4: { name: 'Market Stand 4', w: 8, h: 8, src: '/assets/sprites/props/marketplace/market stand 4.png' },
+            prop_mkt_5: { name: 'Market Stand 5', w: 4, h: 4, src: '/assets/sprites/props/marketplace/market stand 5.png' },
+            prop_cart: { name: 'Vendor Cart', w: 3, h: 3, src: '/assets/sprites/props/marketplace/cart.png' },
+            prop_picnic: { name: 'Picnic Table', w: 4, h: 4, src: '/assets/sprites/props/marketplace/picnic table.png' },
+            prop_sign: { name: 'Sign Post', w: 3, h: 4, src: '/assets/sprites/props/marketplace/sign post.png' },
+            
+            // Aliases for exterior palette compatibility
+            mkt_stand_1: { name: 'Market Stand 1', w: 9, h: 8, src: '/assets/sprites/props/marketplace/market stand 1.png' },
+            mkt_stand_2: { name: 'Market Stand 2', w: 7, h: 8, src: '/assets/sprites/props/marketplace/market stand 2.png' },
+            mkt_stand_3: { name: 'Market Stand 3', w: 8, h: 8, src: '/assets/sprites/props/marketplace/market stand 3.png' },
+            mkt_stand_4: { name: 'Market Stand 4', w: 8, h: 8, src: '/assets/sprites/props/marketplace/market stand 4.png' },
+            mkt_stand_5: { name: 'Market Stand 5', w: 4, h: 4, src: '/assets/sprites/props/marketplace/market stand 5.png' },
+            mkt_cart: { name: 'Vendor Cart', w: 3, h: 3, src: '/assets/sprites/props/marketplace/cart.png' },
+            mkt_picnic: { name: 'Picnic Table', w: 4, h: 4, src: '/assets/sprites/props/marketplace/picnic table.png' },
+            mkt_sign: { name: 'Sign Post', w: 3, h: 4, src: '/assets/sprites/props/marketplace/sign post.png' },
+            mkt_flower_bed: { name: 'Flower Bed', w: 4, h: 4, src: '/assets/sprites/props/marketplace/flower bed.png' }
         };
 
         // 10 Cottages H01-H10 (5x5)
@@ -482,6 +676,7 @@
             };
         }
 
+        // Preload all registered structure & prop images
         Object.entries(STRUCTURES).forEach(([key, data]) => {
             if (!images[data.src]) {
                 const img = new Image();
@@ -491,9 +686,21 @@
             }
         });
 
+        function switchPropTab(tabKey) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.prop-category-group').forEach(el => el.style.display = 'none');
+            
+            const btn = document.getElementById('tab-btn-' + tabKey);
+            const content = document.getElementById('tab-content-' + tabKey);
+            if (btn) btn.classList.add('active');
+            if (content) content.style.display = 'grid';
+        }
+
         function pushHistory() {
             if (historyStack.length > 25) historyStack.shift();
             historyStack.push({
+                cols: cols,
+                rows: rows,
                 grid: JSON.parse(JSON.stringify(grid)),
                 collision: JSON.parse(JSON.stringify(collisionGrid)),
                 structures: JSON.parse(JSON.stringify(placedStructures))
@@ -504,52 +711,156 @@
         function undo() {
             if (historyStack.length === 0) return;
             redoStack.push({
+                cols: cols,
+                rows: rows,
                 grid: JSON.parse(JSON.stringify(grid)),
                 collision: JSON.parse(JSON.stringify(collisionGrid)),
                 structures: JSON.parse(JSON.stringify(placedStructures))
             });
             const state = historyStack.pop();
+            cols = state.cols || cols;
+            rows = state.rows || rows;
             grid = state.grid;
             collisionGrid = state.collision || Array(rows).fill(0).map(() => Array(cols).fill(0));
             placedStructures = state.structures;
+            updateRoomDimensionBadge();
+            resizeCanvas();
             renderMap();
         }
 
         function redo() {
             if (redoStack.length === 0) return;
             historyStack.push({
+                cols: cols,
+                rows: rows,
                 grid: JSON.parse(JSON.stringify(grid)),
                 collision: JSON.parse(JSON.stringify(collisionGrid)),
                 structures: JSON.parse(JSON.stringify(placedStructures))
             });
             const state = redoStack.pop();
+            cols = state.cols || cols;
+            rows = state.rows || rows;
             grid = state.grid;
             collisionGrid = state.collision || Array(rows).fill(0).map(() => Array(cols).fill(0));
             placedStructures = state.structures;
+            updateRoomDimensionBadge();
+            resizeCanvas();
             renderMap();
         }
 
-        // Mode Switching: Exterior vs Interior
+        function updateRoomDimensionBadge() {
+            const badge = document.getElementById('current-room-dim-badge');
+            const wInput = document.getElementById('room-width-input');
+            const hInput = document.getElementById('room-height-input');
+            if (badge) badge.innerText = `${cols} × ${rows}`;
+            if (wInput) wInput.value = cols;
+            if (hInput) hInput.value = rows;
+        }
+
+        function applyPresetRoomSize(w, h) {
+            document.getElementById('room-width-input').value = w;
+            document.getElementById('room-height-input').value = h;
+            resizeInnerRoom();
+        }
+
+        function resizeInnerRoom() {
+            if (currentMapKey === 'village_exterior') {
+                alert('Inner layout expansion is for building interior layers (e.g. Village Hall, Local House, Library)!');
+                return;
+            }
+            const newCols = parseInt(document.getElementById('room-width-input').value) || 23;
+            const newRows = parseInt(document.getElementById('room-height-input').value) || 15;
+            if (newCols < 8 || newRows < 6) {
+                alert('Minimum interior room size is 8×6 tiles.');
+                return;
+            }
+            pushHistory();
+
+            const oldCols = cols;
+            const oldRows = rows;
+            const defaultFloor = currentMapKey === 'interior_library' ? 2 : currentMapKey === 'interior_clinic' ? 3 : currentMapKey === 'interior_villagehall' ? 4 : currentMapKey === 'interior_school' ? 5 : 1;
+
+            const newGrid = Array(newRows).fill(0).map(() => Array(newCols).fill(defaultFloor));
+            const newCollision = Array(newRows).fill(0).map(() => Array(newCols).fill(0));
+
+            // Copy existing grid contents
+            for (let y = 0; y < Math.min(oldRows, newRows); y++) {
+                for (let x = 0; x < Math.min(oldCols, newCols); x++) {
+                    newGrid[y][x] = grid[y][x];
+                    newCollision[y][x] = collisionGrid[y][x];
+                }
+            }
+
+            // Remove structures out of new bounds
+            placedStructures = placedStructures.filter(s => {
+                const st = STRUCTURES[s.key] || { w: s.w || 1, h: s.h || 1 };
+                return (s.x + st.w <= newCols && s.y + st.h <= newRows);
+            });
+
+            cols = newCols;
+            rows = newRows;
+            grid = newGrid;
+            collisionGrid = newCollision;
+
+            updateRoomDimensionBadge();
+            resizeCanvas();
+            autoGenerateSolids();
+            renderMap();
+        }
+
+        // Cache the currently active layer in memory
+        function cacheCurrentLayer() {
+            mapLayersCache[currentMapKey] = {
+                cols: cols,
+                rows: rows,
+                grid: JSON.parse(JSON.stringify(grid)),
+                collisionGrid: JSON.parse(JSON.stringify(collisionGrid)),
+                placedStructures: JSON.parse(JSON.stringify(placedStructures))
+            };
+        }
+
+        // Mode Switching: Exterior vs Interior with strict isolation
         async function switchMapMode(mapKey) {
+            // First save previous active layer into cache
+            cacheCurrentLayer();
+
             currentMapKey = mapKey;
             const isExterior = mapKey === 'village_exterior';
             document.getElementById('exterior-tools-container').style.display = isExterior ? 'block' : 'none';
             document.getElementById('interior-tools-container').style.display = isExterior ? 'none' : 'block';
+            document.getElementById('room-expansion-panel').style.display = isExterior ? 'none' : 'flex';
+
+            historyStack = [];
+            redoStack = [];
 
             if (isExterior) {
-                cols = 94;
-                rows = 70;
                 setZoom(1);
                 selectTool('dirt');
-                await loadLayoutFile();
+                if (mapLayersCache['village_exterior']) {
+                    const cached = mapLayersCache['village_exterior'];
+                    cols = cached.cols;
+                    rows = cached.rows;
+                    grid = JSON.parse(JSON.stringify(cached.grid));
+                    collisionGrid = JSON.parse(JSON.stringify(cached.collisionGrid));
+                    placedStructures = JSON.parse(JSON.stringify(cached.placedStructures));
+                } else {
+                    await loadLayoutFile();
+                }
             } else {
-                // Interior Room: 15x10 tiles = 240x160px
-                cols = 15;
-                rows = 10;
-                setZoom(2.5);
+                setZoom(2.0);
                 selectTool('floor_wood');
-                await loadInteriorFile(mapKey);
+                if (mapLayersCache[mapKey]) {
+                    const cached = mapLayersCache[mapKey];
+                    cols = cached.cols;
+                    rows = cached.rows;
+                    grid = JSON.parse(JSON.stringify(cached.grid));
+                    collisionGrid = JSON.parse(JSON.stringify(cached.collisionGrid));
+                    placedStructures = JSON.parse(JSON.stringify(cached.placedStructures));
+                } else {
+                    await loadInteriorFile(mapKey);
+                }
             }
+            updateRoomDimensionBadge();
             resizeCanvas();
             renderMap();
         }
@@ -567,16 +878,16 @@
             for (let y = 0; y < rows; y++) for (let x = 0; x < cols; x++) collisionGrid[y][x] = 0;
 
             if (currentMapKey === 'village_exterior') {
-                // Forest border trees (outer 5 tiles)
+                // Forest border trees (outer 4 tiles)
                 for (let y = 0; y < rows; y++) {
                     for (let x = 0; x < cols; x++) {
-                        if (y < 4 || y >= 66 || x < 4 || x >= 90) collisionGrid[y][x] = 1;
+                        if (y < 4 || y >= rows - 4 || x < 4 || x >= cols - 4) collisionGrid[y][x] = 1;
                     }
                 }
 
                 // Structures
                 placedStructures.forEach(s => {
-                    const isBldg = ['hall', 'clinic', 'library', 'school'].includes(s.key) || (s.key && s.key.startsWith('h') && s.key !== 'hall');
+                    const isBldg = ['hall', 'clinic', 'library', 'school', 'local_house'].includes(s.key) || (s.key && s.key.startsWith('h') && s.key !== 'hall');
                     const isStatue = s.key === 'statue';
                     const isFountain = s.key === 'fountain';
                     const isTree = ['oak', 'maple', 'pine'].includes(s.key);
@@ -604,14 +915,26 @@
                         }
                     } else if (isTree) {
                         if (s.y >= 0 && s.y < rows && s.x >= 0 && s.x < cols) collisionGrid[s.y][s.x] = 1;
+                    } else {
+                        // General Prop solid
+                        const st = STRUCTURES[s.key];
+                        if (st) {
+                            for (let dy = 0; dy < st.h; dy++) {
+                                for (let dx = 0; dx < st.w; dx++) {
+                                    const ty = s.y + dy, tx = s.x + dx;
+                                    if (ty >= 0 && ty < rows && tx >= 0 && tx < cols) collisionGrid[ty][tx] = 1;
+                                }
+                            }
+                        }
                     }
                 });
             } else {
-                // Interior Room: Outer walls solid, door exit open
+                // Interior Room: Outer walls solid, door exit open at bottom center (2 tiles wide)
                 for (let x = 0; x < cols; x++) { collisionGrid[0][x] = 1; }
                 for (let y = 0; y < rows; y++) { collisionGrid[y][0] = 1; collisionGrid[y][cols - 1] = 1; }
+                const midX = Math.floor(cols / 2);
                 for (let x = 0; x < cols; x++) {
-                    if (x !== Math.floor(cols / 2)) collisionGrid[rows - 1][x] = 1;
+                    if (x !== midX && x !== midX - 1) collisionGrid[rows - 1][x] = 1;
                 }
                 // Interior props solid
                 placedStructures.forEach(s => {
@@ -627,7 +950,6 @@
                 });
             }
             renderMap();
-            alert('⚡ Auto-generated solid collision grid!');
         }
 
         function clearAllSolids() {
@@ -715,6 +1037,7 @@
         }
 
         async function saveToServer() {
+            cacheCurrentLayer();
             exportJSON();
             const jsonText = document.getElementById('json-output').value;
             try {
@@ -724,7 +1047,7 @@
                     body: jsonText
                 });
                 if (res.ok) {
-                    alert(`✅ Map saved to server (${currentMapKey})!`);
+                    alert(`✅ Map layout saved to server (${currentMapKey})!`);
                 } else {
                     alert('❌ Save failed: ' + res.statusText);
                 }
@@ -789,7 +1112,7 @@
                 cancelPanMode();
                 selectTool(currentMapKey === 'village_exterior' ? 'dirt' : 'floor_wood');
             }
-            if (e.code === 'Space' && !isSpacePressed && e.target.tagName !== 'TEXTAREA') {
+            if (e.code === 'Space' && !isSpacePressed && e.target.tagName !== 'TEXTAREA' && e.target.tagName !== 'INPUT') {
                 isSpacePressed = true;
                 canvas.style.cursor = 'grab';
                 e.preventDefault();
@@ -810,7 +1133,7 @@
             const isSolid = collisionGrid[y] && collisionGrid[y][x] === 1;
             const solidLabel = isSolid ? ' | 🚫 SOLID' : ' | 🚶 Walkable';
             const toolName = isPanMode ? '🖐️ PAN MODE' : (activeTool === 'solid' ? '🚫 SOLID PAINT' : activeTool === 'passable' ? '🚶 PASSABLE PAINT' : activeTool === 'erase' ? '❌ ERASE' : (STRUCTURES[activeTool] ? STRUCTURES[activeTool].name : activeTool.toUpperCase()));
-            document.getElementById('tile-inspector').innerText = `[${x}, ${y}] Tile: ${tileVal}${solidLabel} | ${toolName} | 🏠 Objects: ${placedStructures.length}`;
+            document.getElementById('tile-inspector').innerText = `[${x}, ${y}] Tile: ${tileVal}${solidLabel} | ${toolName} | 🏠 Objects: ${placedStructures.length} (${cols}×${rows})`;
         }
 
         function handleDraw(e) {
@@ -977,11 +1300,15 @@
                                 const drawY = (s.y + 1) * tileSize - 48;
                                 ctx.drawImage(img, st.sx, st.sy, st.sw, st.sh, drawX, drawY, 32, 48);
                             } else if (s.key === 'bush_rose') {
-                                const drawX = (s.x + 0.5) * tileSize - 10;
-                                const drawY = (s.y + 1) * tileSize - 16;
-                                ctx.drawImage(img, st.sx, st.sy, st.sw, st.sh, drawX, drawY, 20, 16);
-                            } else {
+                                const drawX = (s.x + 0.5) * tileSize - 14;
+                                const drawY = (s.y + 1) * tileSize - 22;
+                                ctx.drawImage(img, st.sx, st.sy, st.sw, st.sh, drawX, drawY, 28, 22);
+                            } else if (st.sw !== undefined && st.sh !== undefined) {
+                                // Sliced image (Civic buildings, Cottages)
                                 ctx.drawImage(img, st.sx, st.sy, st.sw, st.sh, s.x * tileSize, s.y * tileSize, st.w * tileSize, st.h * tileSize);
+                            } else {
+                                // Full standalone PNG prop image
+                                ctx.drawImage(img, 0, 0, img.naturalWidth, img.naturalHeight, s.x * tileSize, s.y * tileSize, st.w * tileSize, st.h * tileSize);
                             }
                         } else {
                             ctx.fillStyle = '#F59E0B';
@@ -1053,10 +1380,10 @@
                 structures: placedStructures
             };
             document.getElementById('json-output').value = JSON.stringify(output, null, 2);
-            alert(`Map JSON for [${currentMapKey}] exported below!`);
         }
 
         function downloadJSON() {
+            cacheCurrentLayer();
             exportJSON();
             const jsonText = document.getElementById('json-output').value;
             const blob = new Blob([jsonText], { type: 'application/json' });
@@ -1097,6 +1424,8 @@
                     if (data.structures && Array.isArray(data.structures)) {
                         placedStructures = data.structures;
                     }
+                    cacheCurrentLayer();
+                    updateRoomDimensionBadge();
                     resizeCanvas();
                     renderMap();
                     alert(`Map loaded: ${srcCols}x${srcRows}`);
@@ -1135,6 +1464,8 @@
                     if (data.structures && Array.isArray(data.structures)) {
                         placedStructures = data.structures;
                     }
+                    cacheCurrentLayer();
+                    updateRoomDimensionBadge();
                     resizeCanvas();
                     renderMap();
                     console.log('Loaded live village_layout.json into Map Editor!');
@@ -1144,58 +1475,120 @@
             }
         }
 
-        // Default Interior Layout Builder
+        // 50% Expanded Interior Layout Loader (23x15 Standard Inner Room Size)
         async function loadInteriorFile(interiorKey) {
+            // Check if server already has saved custom interior json
+            try {
+                const res = await fetch(`/${interiorKey}.json`);
+                if (res.ok) {
+                    const data = await res.json();
+                    cols = data.width || 23;
+                    rows = data.height || 15;
+                    grid = Array(rows).fill(0).map(() => Array(cols).fill(1));
+                    collisionGrid = Array(rows).fill(0).map(() => Array(cols).fill(0));
+
+                    if (data.groundData && Array.isArray(data.groundData)) {
+                        for (let y = 0; y < rows; y++) {
+                            for (let x = 0; x < cols; x++) {
+                                grid[y][x] = data.groundData[y * cols + x] || 1;
+                            }
+                        }
+                    }
+                    if (data.collisionData && Array.isArray(data.collisionData)) {
+                        for (let y = 0; y < rows; y++) {
+                            for (let x = 0; x < cols; x++) {
+                                collisionGrid[y][x] = data.collisionData[y * cols + x] || 0;
+                            }
+                        }
+                    }
+                    if (data.structures && Array.isArray(data.structures)) {
+                        placedStructures = data.structures;
+                    }
+                    cacheCurrentLayer();
+                    updateRoomDimensionBadge();
+                    resizeCanvas();
+                    renderMap();
+                    return;
+                }
+            } catch (e) {
+                // Fallback to 50% expanded presets
+            }
+
+            // Standard +50% expanded room size: 23x15
+            cols = 23;
+            rows = 15;
             grid = Array(rows).fill(0).map(() => Array(cols).fill(1));
             collisionGrid = Array(rows).fill(0).map(() => Array(cols).fill(0));
             placedStructures = [];
 
-            // Preset default interior rooms
+            // Preset default 50% expanded interior rooms using the new individual prop assets
             if (interiorKey === 'interior_villagehall') {
-                for (let y = 0; y < rows; y++) for (let x = 0; x < cols; x++) grid[y][x] = 4;
+                for (let y = 0; y < rows; y++) for (let x = 0; x < cols; x++) grid[y][x] = 4; // Hall Timber
                 placedStructures = [
-                    { key: 'prop_council_table', x: 5, y: 4, w: 4, h: 2 },
-                    { key: 'prop_lectern', x: 11, y: 4, w: 2, h: 2 },
-                    { key: 'prop_filing_cabinet', x: 2, y: 1, w: 1, h: 2 },
-                    { key: 'prop_filing_cabinet', x: 12, y: 1, w: 1, h: 2 },
-                    { key: 'prop_notice_board', x: 1, y: 1, w: 2, h: 2 },
-                    { key: 'prop_barrels_crates', x: 2, y: 4, w: 2, h: 2 }
+                    { key: 'prop_submit_table', x: 8, y: 5, w: 8, h: 6 },
+                    { key: 'prop_podium', x: 11, y: 1, w: 2, h: 3 },
+                    { key: 'prop_hall_table', x: 1, y: 3, w: 8, h: 8 },
+                    { key: 'prop_flower_bed', x: 18, y: 1, w: 4, h: 4 },
+                    { key: 'prop_flower_bed', x: 1, y: 1, w: 4, h: 4 }
                 ];
             } else if (interiorKey === 'interior_library') {
-                for (let y = 0; y < rows; y++) for (let x = 0; x < cols; x++) grid[y][x] = 2;
+                for (let y = 0; y < rows; y++) for (let x = 0; x < cols; x++) grid[y][x] = 2; // Slate Library
                 placedStructures = [
-                    { key: 'prop_verify_podium', x: 6, y: 4, w: 3, h: 2 },
-                    { key: 'prop_db_terminal', x: 2, y: 4, w: 2, h: 2 },
-                    { key: 'prop_bookshelf', x: 10, y: 3, w: 3, h: 3 },
-                    { key: 'prop_bookshelf', x: 2, y: 1, w: 3, h: 3 }
+                    { key: 'prop_large_bookshelf', x: 1, y: 1, w: 5, h: 3 },
+                    { key: 'prop_large_bookshelf', x: 7, y: 1, w: 5, h: 3 },
+                    { key: 'prop_large_bookshelf', x: 17, y: 1, w: 5, h: 3 },
+                    { key: 'prop_library_desk', x: 9, y: 6, w: 5, h: 3 },
+                    { key: 'prop_podium_frag', x: 2, y: 7, w: 2, h: 3 },
+                    { key: 'prop_book_cart', x: 19, y: 8, w: 3, h: 3 },
+                    { key: 'prop_printer', x: 19, y: 4, w: 3, h: 3 }
                 ];
             } else if (interiorKey === 'interior_clinic') {
-                for (let y = 0; y < rows; y++) for (let x = 0; x < cols; x++) grid[y][x] = 3;
+                for (let y = 0; y < rows; y++) for (let x = 0; x < cols; x++) grid[y][x] = 3; // Clinic Tile
                 placedStructures = [
-                    { key: 'prop_lectern', x: 5, y: 3, w: 2, h: 2 },
-                    { key: 'prop_medicine_cabinet', x: 11, y: 2, w: 2, h: 2 },
-                    { key: 'prop_exam_table', x: 2, y: 4, w: 2, h: 1 }
+                    { key: 'prop_clinic_bed', x: 2, y: 2, w: 6, h: 4 },
+                    { key: 'prop_clinic_bed', x: 2, y: 8, w: 6, h: 4 },
+                    { key: 'prop_clinic_cab', x: 16, y: 1, w: 6, h: 4 },
+                    { key: 'prop_clinic_cab_wd', x: 10, y: 1, w: 5, h: 4 },
+                    { key: 'prop_clinic_desk', x: 11, y: 7, w: 6, h: 4 },
+                    { key: 'prop_clinic_mach', x: 18, y: 7, w: 4, h: 4 },
+                    { key: 'prop_clinic_sofa', x: 10, y: 11, w: 5, h: 3 }
                 ];
             } else if (interiorKey === 'interior_school') {
-                for (let y = 0; y < rows; y++) for (let x = 0; x < cols; x++) grid[y][x] = 5;
+                for (let y = 0; y < rows; y++) for (let x = 0; x < cols; x++) grid[y][x] = 5; // School Floor
                 placedStructures = [
-                    { key: 'prop_chalkboard', x: 6, y: 1, w: 2, h: 2 },
-                    { key: 'prop_lectern', x: 6, y: 3, w: 2, h: 2 },
-                    { key: 'prop_school_desk', x: 3, y: 6, w: 1, h: 1 },
-                    { key: 'prop_school_desk', x: 5, y: 6, w: 1, h: 1 },
-                    { key: 'prop_school_desk', x: 9, y: 6, w: 1, h: 1 },
-                    { key: 'prop_school_desk', x: 11, y: 6, w: 1, h: 1 },
-                    { key: 'prop_notice_board', x: 2, y: 3, w: 2, h: 2 }
+                    { key: 'prop_chalk_board', x: 7, y: 1, w: 9, h: 5 },
+                    { key: 'prop_teacher_table', x: 8, y: 6, w: 8, h: 6 },
+                    { key: 'prop_students_table', x: 2, y: 8, w: 7, h: 6 },
+                    { key: 'prop_students_table', x: 14, y: 8, w: 7, h: 6 },
+                    { key: 'prop_student_locker', x: 1, y: 1, w: 8, h: 7 },
+                    { key: 'prop_school_bookshelf', x: 16, y: 1, w: 6, h: 8 }
+                ];
+            } else if (interiorKey === 'interior_local_house') {
+                for (let y = 0; y < rows; y++) for (let x = 0; x < cols; x++) grid[y][x] = 1; // Warm Timber
+                placedStructures = [
+                    { key: 'prop_bed', x: 2, y: 2, w: 3, h: 3 },
+                    { key: 'prop_bedside', x: 5, y: 2, w: 2, h: 3 },
+                    { key: 'prop_fireplace', x: 10, y: 1, w: 4, h: 4 },
+                    { key: 'prop_sofa', x: 15, y: 3, w: 5, h: 3 },
+                    { key: 'prop_small_table', x: 16, y: 7, w: 3, h: 2 },
+                    { key: 'prop_carpet', x: 15, y: 6, w: 5, h: 3 },
+                    { key: 'prop_flower_bed', x: 2, y: 9, w: 4, h: 4 }
                 ];
             } else {
-                // Cottage
-                for (let y = 0; y < rows; y++) for (let x = 0; x < cols; x++) grid[y][x] = 1;
+                // Cottage House
+                for (let y = 0; y < rows; y++) for (let x = 0; x < cols; x++) grid[y][x] = 1; // Warm Timber
                 placedStructures = [
-                    { key: 'prop_cottage_bed', x: 2, y: 2, w: 2, h: 2 },
-                    { key: 'prop_db_terminal', x: 10, y: 2, w: 2, h: 2 },
-                    { key: 'prop_barrels_crates', x: 2, y: 6, w: 2, h: 2 }
+                    { key: 'prop_bed', x: 2, y: 2, w: 3, h: 3 },
+                    { key: 'prop_bedside', x: 5, y: 2, w: 2, h: 3 },
+                    { key: 'prop_fireplace', x: 10, y: 1, w: 4, h: 4 },
+                    { key: 'prop_sofa', x: 16, y: 2, w: 5, h: 3 },
+                    { key: 'prop_tv_set', x: 16, y: 8, w: 5, h: 3 },
+                    { key: 'prop_carpet', x: 10, y: 6, w: 5, h: 3 },
+                    { key: 'prop_dining_table', x: 2, y: 8, w: 3, h: 2 }
                 ];
             }
+            cacheCurrentLayer();
+            updateRoomDimensionBadge();
             autoGenerateSolids();
         }
 

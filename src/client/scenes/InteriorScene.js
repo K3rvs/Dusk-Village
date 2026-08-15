@@ -33,18 +33,18 @@ export default class InteriorScene extends Phaser.Scene {
         this.add.rectangle(0, 0, 4000, 4000, 0x000000).setDepth(-100);
 
         // Calculate exact world center based on scale
-        const scale = CONFIG.DEFAULT_RENDER_SCALE || 3;
-        const camW = this.scale.width / scale;  // 320px
-        const camH = this.scale.height / scale; // 240px
+        const scale = 2.0;
+        const camW = this.scale.width / scale;
+        const camH = this.scale.height / scale;
 
-        const centerX = camW / 2; // 160px (Dead Center)
-        const centerY = camH / 2; // 120px (Dead Center)
+        const centerX = camW / 2;
+        const centerY = camH / 2;
 
-        // Interior Room Size (Centered)
-        const roomW = 240;
-        const roomH = 160;
-        const roomX = centerX - roomW / 2; // 40
-        const roomY = centerY - roomH / 2; // 40
+        // Interior Room Size: 50% Expanded (23x15 tiles = 368x240px)
+        const roomW = 368;
+        const roomH = 240;
+        const roomX = centerX - roomW / 2;
+        const roomY = centerY - roomH / 2;
 
         // Floor Color Theme
         const bTypeUpper = this.buildingType.toUpperCase();

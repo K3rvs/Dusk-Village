@@ -11,6 +11,7 @@ const wss = new WebSocket.Server({ server, path: '/ws' });
 // Serve static files (production)
 app.use(express.static(path.join(__dirname, '../../dist')));
 app.use(express.static(path.join(__dirname, '../../public')));
+app.use('/assets', express.static(path.join(__dirname, '../../assets')));
 app.use(express.json({ limit: '10mb' }));
 
 // Save map layout endpoint (for map editor "Save to Server" button)
