@@ -14,13 +14,13 @@ const EXTERIOR_ACCESSIBLE_SPAWN_POINTS = [
     { x: 576, y: 352, area: 'School South Walk C',     location: 'EXTERIOR' },
     { x: 624, y: 352, area: 'School South Walk E',     location: 'EXTERIOR' },
 
-    // -- SCHOOL INTERIOR --
-    { x: null, y: null, area: 'School Interior NW',   location: 'SCHOOL', spawnTile: { x: 3,  y: 3  } },
-    { x: null, y: null, area: 'School Interior NE',   location: 'SCHOOL', spawnTile: { x: 19, y: 3  } },
-    { x: null, y: null, area: 'School Interior CW',   location: 'SCHOOL', spawnTile: { x: 4,  y: 10 } },
-    { x: null, y: null, area: 'School Interior CE',   location: 'SCHOOL', spawnTile: { x: 18, y: 10 } },
-    { x: null, y: null, area: 'School Interior SW',   location: 'SCHOOL', spawnTile: { x: 5,  y: 18 } },
-    { x: null, y: null, area: 'School Interior SE',   location: 'SCHOOL', spawnTile: { x: 17, y: 18 } },
+    // -- SCHOOL INTERIOR (Open Hallways & Classroom Aisles) --
+    { x: null, y: null, area: 'School Hallway N',       location: 'SCHOOL', spawnTile: { x: 11, y: 9  } },
+    { x: null, y: null, area: 'School Hallway S',       location: 'SCHOOL', spawnTile: { x: 11, y: 15 } },
+    { x: null, y: null, area: 'School Classroom W',     location: 'SCHOOL', spawnTile: { x: 6,  y: 12 } },
+    { x: null, y: null, area: 'School Classroom E',     location: 'SCHOOL', spawnTile: { x: 17, y: 12 } },
+    { x: null, y: null, area: 'School South Room W',    location: 'SCHOOL', spawnTile: { x: 6,  y: 18 } },
+    { x: null, y: null, area: 'School South Room E',    location: 'SCHOOL', spawnTile: { x: 17, y: 18 } },
 
     // -- CLINIC EXTERIOR --
     { x: 832, y: 256, area: 'Clinic North Gate',       location: 'EXTERIOR' },
@@ -32,10 +32,12 @@ const EXTERIOR_ACCESSIBLE_SPAWN_POINTS = [
     { x: 912, y: 352, area: 'Clinic South Walk C',      location: 'EXTERIOR' },
     { x: 944, y: 352, area: 'Clinic South Walk E',      location: 'EXTERIOR' },
 
-    // -- CLINIC INTERIOR --
-    { x: null, y: null, area: 'Clinic Interior N',     location: 'CLINIC', spawnTile: { x: 3, y: 3  } },
-    { x: null, y: null, area: 'Clinic Interior C',     location: 'CLINIC', spawnTile: { x: 5, y: 7  } },
-    { x: null, y: null, area: 'Clinic Interior S',     location: 'CLINIC', spawnTile: { x: 3, y: 12 } },
+    // -- CLINIC INTERIOR (Open Corridors & Walkable Floor Tiles) --
+    { x: null, y: null, area: 'Clinic Corridor Center', location: 'CLINIC', spawnTile: { x: 5, y: 9  } },
+    { x: null, y: null, area: 'Clinic Hallway East',    location: 'CLINIC', spawnTile: { x: 7, y: 6  } },
+    { x: null, y: null, area: 'Clinic Room East',       location: 'CLINIC', spawnTile: { x: 7, y: 11 } },
+    { x: null, y: null, area: 'Clinic Carpet Area',     location: 'CLINIC', spawnTile: { x: 5, y: 13 } },
+    { x: null, y: null, area: 'Clinic Waiting Area',    location: 'CLINIC', spawnTile: { x: 4, y: 4  } },
 ];
 
 class GameSession {

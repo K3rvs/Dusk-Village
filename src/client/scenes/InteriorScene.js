@@ -366,8 +366,8 @@ export default class InteriorScene extends Phaser.Scene {
                 ease: 'Sine.easeInOut'
             });
 
-            // Interaction zone
-            const zone = this.add.zone(fx, fy, 32, 32);
+            // Interaction zone (generous 48x48 pickup radius)
+            const zone = this.add.zone(fx, fy, 48, 48);
             this.physics.add.existing(zone, true);
 
             this.interiorFragments.push({

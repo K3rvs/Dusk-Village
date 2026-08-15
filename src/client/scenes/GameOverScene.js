@@ -6,19 +6,33 @@ export default class GameOverScene extends Phaser.Scene {
     }
 
     init(data) {
-        this.winner = data.winner || 'SURVIVORS';
+        this.winner = (data.winner || 'SURVIVOR').toUpperCase();
         this.reason = data.reason || 'MYSTERY_SOLVED';
         this.roleReveal = data.roleReveal || [];
         this.mysteryResult = data.mysteryResult || {};
-        this.localPlayerRole = data.localPlayerRole || 'SURVIVOR';
+        this.localPlayerRole = (data.localPlayerRole || 'SURVIVOR').toUpperCase();
     }
 
     create() {
         const { width, height } = this.cameras.main;
-        this.cameras.main.setBackgroundColor('#0F172A');
 
-        const localWon = (this.winner === 'SURVIVORS' && this.localPlayerRole === 'SURVIVOR') ||
-                          (this.winner === 'INSTIGATORS' && this.localPlayerRole === 'INSTIGATOR');
+        // 1. Cinematic Dusk Twilight Sunset Backdrop
+        if (this.textures.exists('bg_menu_dusk')) {
+            const bg = this.add.image(width / 2, height / 2, 'bg_menu_dusk');
+            bg.setDisplaySize(width, height);
+            bg.setDepth(0);
+
+            // Dark vignette overlay
+            this.add.rectangle(width / 2, height / 2, width, height, 0x000000, 0.52).setDepth(1);
+        } else {
+            this.cameras.main.setBackgroundColor('#0F172A');
+        }
+
+        // Ambient Floating Embers
+        this.createAmbientEmbers(width, height);
+
+        const localWon = (this.winner.startsWith('SURVIVOR') && this.localPlayerRole === 'SURVIVOR') ||
+                          (this.winner.startsWith('INSTIGATOR') && this.localPlayerRole === 'INSTIGATOR');
 
         // Sound stings
         if (localWon && this.sound.get('mus_victory_fanfare')) {
@@ -27,135 +41,206 @@ export default class GameOverScene extends Phaser.Scene {
             this.sound.play('mus_defeat_sting', { volume: 0.7 });
         }
 
-        // Header Title Banner
-        const titleText = localWon ? '★ VICTORY ★' : 'GAME OVER';
-        const titleColor = localWon ? '#10B981' : '#EF4444';
-        const bannerColor = localWon ? 0x10B981 : 0xEF4444;
+        // 2. Header Result Banner
+        const titleText = localWon ? '★ VICTORY ★' : '💀 DEFEAT';
+        const titleColor = localWon ? '#34D399' : '#F87171';
+        const titleGlow = localWon ? '#059669' : '#DC2626';
 
-        this.add.text(width / 2, 40, titleText, {
+        this.add.text(width / 2, 34, titleText, {
             fontFamily: 'DogicaBold, Dogica, monospace',
             fontSize: '22px',
             color: titleColor,
-            letterSpacing: 2
+            letterSpacing: 2,
+            shadow: { offsetX: 0, offsetY: 2, color: titleGlow, blur: 18, fill: true }
+        }).setOrigin(0.5).setDepth(10);
+
+        // 3. Faction Result & Subtitle Badge
+        const factionStr = this.winner.startsWith('SURVIVOR') ? 'SURVIVORS TRIUMPH' : 'INSTIGATORS TRIUMPH';
+        const roleStr = `YOU WERE: ${this.localPlayerRole === 'INSTIGATOR' ? '🗡️ INSTIGATOR' : '🛡️ SURVIVOR'}`;
+        
+        const subtitleBadge = this.add.container(width / 2, 68).setDepth(10);
+        const subBg = this.add.rectangle(0, 0, 420, 24, localWon ? 0x064E3B : 0x450A0A, 0.92);
+        subBg.setStrokeStyle(1.2, localWon ? 0x10B981 : 0xEF4444, 0.9);
+
+        const subText = this.add.text(0, 0, `${factionStr}  •  ${roleStr}`, {
+            fontFamily: 'DogicaBold, Dogica, monospace',
+            fontSize: '7.5px',
+            color: localWon ? '#A7F3D0' : '#FECACA',
+            letterSpacing: 0.5
         }).setOrigin(0.5);
 
-        // Faction Result Subtitle
-        this.add.text(width / 2, 78, `${this.winner} TRIUMPH`, {
-            fontFamily: 'Dogica, monospace',
-            fontSize: '12px',
-            color: '#F8FAFC',
-            letterSpacing: 1.5
-        }).setOrigin(0.5);
+        subtitleBadge.add([subBg, subText]);
 
-        // Narrative Summary Card
-        const summaryCard = this.add.container(width / 2, 120);
-        const cardBg = this.add.rectangle(0, 0, 560, 42, 0x1E293B, 0.95);
-        cardBg.setStrokeStyle(1.5, bannerColor, 0.7);
+        // 4. Narrative Outcome Summary Box
+        const summaryBox = this.add.container(width / 2, 106).setDepth(10);
+        const sumBg = this.add.rectangle(0, 0, 680, 36, 0x181311, 0.94);
+        sumBg.setStrokeStyle(1.5, 0x785338, 0.85);
 
         const reasonText = this.add.text(0, 0, this.getReasonText(), {
             fontFamily: 'Dogica, monospace',
+            fontSize: '7.5px',
+            color: '#E2D5C3',
+            align: 'center',
+            wordWrap: { width: 650 }
+        }).setOrigin(0.5);
+
+        summaryBox.add([sumBg, reasonText]);
+
+        // 5. Post-Game Council Roster Board (2 Columns x 5 Rows)
+        const rosterBoardW = 760;
+        const rosterBoardH = 260;
+        const rosterCenterY = height * 0.55;
+
+        const rosterBoardBg = this.add.rectangle(width / 2, rosterCenterY, rosterBoardW, rosterBoardH, 0x120E16, 0.9).setDepth(5);
+        rosterBoardBg.setStrokeStyle(1.5, 0x785338, 0.85);
+
+        // Center vertical divider
+        this.add.rectangle(width / 2, rosterCenterY, 1.5, rosterBoardH - 20, 0x3D322A, 0.8).setDepth(6);
+
+        // Board Header
+        this.add.text(width / 2, rosterCenterY - rosterBoardH / 2 + 14, 'FINAL COUNCIL ROSTER & IDENTITY REVEAL', {
+            fontFamily: 'DogicaBold, Dogica, monospace',
             fontSize: '8px',
-            color: '#94A3B8'
-        }).setOrigin(0.5);
-
-        summaryCard.add([cardBg, reasonText]);
-
-        // Role Reveal Table Header
-        this.add.text(width / 2, 168, 'POST-GAME ROLE REVEAL', {
-            fontFamily: 'Dogica, monospace',
-            fontSize: '9.5px',
-            color: '#94A3B8',
+            color: '#F59E0B',
             letterSpacing: 1
-        }).setOrigin(0.5);
+        }).setOrigin(0.5).setDepth(7);
 
-        // Table Rows Container
-        const rowStartY = 202;
-        const rowH = 34;
+        // Render 10 Player Slots (2 columns of 5)
+        const slotW = 345;
+        const slotH = 38;
+        const gapY = 44;
+        const startY = rosterCenterY - 80;
 
-        this.roleReveal.forEach((player, index) => {
-            const y = rowStartY + index * rowH;
-            const isSurvivor = player.role === 'SURVIVOR';
-            const roleColor = isSurvivor ? '#10B981' : '#EF4444';
-            const statusText = player.isAlive ? '✓ ALIVE' : `EVICTED (Day ${player.eliminationDay || 1})`;
-            const statusColor = player.isAlive ? '#10B981' : '#64748B';
+        const playersList = this.roleReveal.length > 0
+            ? this.roleReveal
+            : Array.from({ length: 10 }, (_, i) => ({ id: `p${i+1}`, name: `Player ${i+1}`, role: i < 3 ? 'INSTIGATOR' : 'SURVIVOR', isAlive: true }));
 
-            const rowBg = this.add.rectangle(width / 2, y, 560, 28, 0x1E293B, 0.8);
-            rowBg.setStrokeStyle(1, 0x334155, 0.6);
+        playersList.slice(0, 10).forEach((player, i) => {
+            const col = i < 5 ? 0 : 1;
+            const row = i % 5;
+            const slotX = width / 2 + (col === 0 ? -188 : 188);
+            const slotY = startY + row * gapY;
 
-            // Avatar Portrait
-            const avatarId = player.avatarId || '01';
-            const portKey = `port_avatar_${avatarId}_select`;
-            if (this.textures.exists(portKey)) {
-                const portImg = this.add.image(width / 2 - 250, y, portKey);
-                portImg.setDisplaySize(24, 24);
-            }
-
-            // Player Name
-            this.add.text(width / 2 - 230, y, player.displayName || `Player ${index + 1}`, {
-                fontFamily: 'Dogica, monospace',
-                fontSize: '8px',
-                color: '#F8FAFC'
-            }).setOrigin(0, 0.5);
-
-            // Role Badge Tag
-            this.add.text(width / 2, y, player.role, {
-                fontFamily: 'Dogica, monospace',
-                fontSize: '8px',
-                color: roleColor
-            }).setOrigin(0.5, 0.5);
-
-            // Status Badge
-            this.add.text(width / 2 + 250, y, statusText, {
-                fontFamily: 'Dogica, monospace',
-                fontSize: '7.5px',
-                color: statusColor
-            }).setOrigin(1, 0.5);
+            this.createPlayerSlot(slotX, slotY, player, slotW, slotH);
         });
 
-        // Bottom Action Buttons
-        const btnY = height - 45;
-        this.createActionButton(width * 0.36, btnY, 'PLAY AGAIN', 0x10B981, () => {
+        // 6. Bottom Action Navigation Buttons
+        const btnY = height - 42;
+        this.createActionButton(width * 0.36, btnY, '↻ PLAY AGAIN', 0x15803D, () => {
             this.cleanupAndNavigate('LobbyScene', { isHost: false });
         });
 
-        this.createActionButton(width * 0.64, btnY, 'MAIN MENU', 0x475569, () => {
+        this.createActionButton(width * 0.64, btnY, '⌂ MAIN MENU', 0x374151, () => {
             this.cleanupAndNavigate('MenuScene');
         });
     }
 
-    cleanupAndNavigate(targetScene, data = {}) {
-        ['GameOverScene', 'InteriorScene', 'UIScene', 'GameScene', 'CharacterSelectScene', 'LobbyScene'].forEach(key => {
-            if (this.scene.manager.getScene(key)) {
-                this.scene.stop(key);
-            }
-        });
-        if (targetScene === 'MenuScene' && window.socketClient) {
-            window.socketClient.disconnect();
+    createPlayerSlot(x, y, player, w, h) {
+        const isSurvivor = (player.role || '').toUpperCase() === 'SURVIVOR';
+        const roleColor = isSurvivor ? '#34D399' : '#F87171';
+        const roleBgColor = isSurvivor ? 0x064E3B : 0x450A0A;
+        const roleStroke = isSurvivor ? 0x10B981 : 0xEF4444;
+
+        const isAlive = player.isAlive !== false;
+
+        const container = this.add.container(x, y).setDepth(8);
+
+        // Slot Background Card
+        const slotBg = this.add.rectangle(0, 0, w, h, 0x201717, 0.9);
+        slotBg.setStrokeStyle(1, 0x4A2A2A, 0.8);
+
+        // Avatar Icon
+        const avatarId = player.avatarId || '01';
+        const portKey = `spr_avatar_${avatarId}`;
+        const avatarIcon = this.textures.exists(portKey)
+            ? this.add.sprite(-w / 2 + 20, 0, portKey, 0).setScale(0.8)
+            : this.add.circle(-w / 2 + 20, 0, 10, 0x785338);
+
+        // Name Text
+        let nameStr = player.name || player.displayName || 'Player';
+        if (nameStr.length > 12) nameStr = nameStr.substring(0, 10) + '..';
+
+        const nameText = this.add.text(-w / 2 + 40, 0, nameStr, {
+            fontFamily: 'Dogica, monospace',
+            fontSize: '7.5px',
+            color: '#FDFBF7'
+        }).setOrigin(0, 0.5);
+
+        // Role Badge Tag
+        const roleBadgeBg = this.add.rectangle(w / 2 - 96, 0, 84, 18, roleBgColor, 0.95);
+        roleBadgeBg.setStrokeStyle(1, roleStroke, 0.8);
+
+        const roleText = this.add.text(w / 2 - 96, 0, isSurvivor ? '🛡️ SURVIVOR' : '🗡️ INSTIGATOR', {
+            fontFamily: 'DogicaBold, monospace',
+            fontSize: '6.5px',
+            color: roleColor
+        }).setOrigin(0.5);
+
+        // Status Tag (Alive / Evicted)
+        const statusBadgeBg = this.add.rectangle(w / 2 - 24, 0, 48, 18, isAlive ? 0x14532D : 0x7F1D1D, 0.9);
+        statusBadgeBg.setStrokeStyle(1, isAlive ? 0x15803D : 0xDC2626, 0.8);
+
+        const statusText = this.add.text(w / 2 - 24, 0, isAlive ? 'ALIVE' : 'EVICTED', {
+            fontFamily: 'Dogica, monospace',
+            fontSize: '6px',
+            color: isAlive ? '#4ADE80' : '#FCA5A5'
+        }).setOrigin(0.5);
+
+        container.add([slotBg, avatarIcon, nameText, roleBadgeBg, roleText, statusBadgeBg, statusText]);
+        return container;
+    }
+
+    createAmbientEmbers(width, height) {
+        for (let i = 0; i < 20; i++) {
+            const x = Phaser.Math.Between(0, width);
+            const y = Phaser.Math.Between(0, height);
+            const size = Phaser.Math.FloatBetween(1, 2.5);
+            const color = Phaser.Math.RND.pick([0xF59E0B, 0xD97706, 0xEF4444, 0xFBBF24]);
+
+            const ember = this.add.circle(x, y, size, color, Phaser.Math.FloatBetween(0.3, 0.7)).setDepth(2);
+
+            this.tweens.add({
+                targets: ember,
+                y: y - Phaser.Math.Between(80, 200),
+                x: x + Phaser.Math.Between(-30, 30),
+                alpha: 0,
+                duration: Phaser.Math.Between(3000, 7000),
+                repeat: -1,
+                delay: Phaser.Math.Between(0, 3000),
+                onRepeat: () => {
+                    ember.setPosition(Phaser.Math.Between(0, width), height + 10);
+                    ember.setAlpha(Phaser.Math.FloatBetween(0.3, 0.7));
+                }
+            });
         }
-        this.scene.start(targetScene, data);
     }
 
     getReasonText() {
-        switch (this.reason) {
-            case 'MYSTERY_SOLVED': return '"The mystery has been solved at the Library. Misinformation contained."';
-            case 'ALL_INSTIGATORS_EVICTED': return '"All instigators were identified and evicted by majority vote."';
-            case 'VOTING_PARITY': return '"Instigators reached voting parity and took control of the village."';
-            default: return '"The match has concluded."';
+        const r = (this.reason || '').toUpperCase();
+        if (r.includes('SOLVE') || r.includes('MYSTERY')) {
+            return '📜 All 3 verified evidence fragments were delivered to the Village Hall Archive. Truth restored to Dusk Village!';
         }
+        if (r.includes('ALL_INSTIGATORS') || r.includes('EVICT')) {
+            return '⚖️ All hidden Instigators were successfully identified and banished by majority vote of the town council.';
+        }
+        if (r.includes('PARITY') || r.includes('INSTIGATOR')) {
+            return '🗡️ The Instigators successfully derailed the investigation and overwhelmed the village council.';
+        }
+        return `The match has concluded: ${this.reason}`;
     }
 
     createActionButton(x, y, text, colorHex, callback) {
-        const container = this.add.container(x, y);
+        const container = this.add.container(x, y).setDepth(15);
 
-        const bg = this.add.rectangle(0, 0, 180, 44, colorHex, 0.95);
+        const bg = this.add.rectangle(0, 0, 190, 36, colorHex, 0.95);
         bg.setStrokeStyle(1.5, 0xFFFFFF, 0.3);
         bg.setInteractive({ useHandCursor: true });
 
         const label = this.add.text(0, 0, text, {
-            fontFamily: 'Dogica, monospace',
-            fontSize: '9.5px',
+            fontFamily: 'DogicaBold, monospace',
+            fontSize: '8.5px',
             color: '#FFFFFF',
-            letterSpacing: 1
+            letterSpacing: 0.5
         }).setOrigin(0.5);
 
         container.add([bg, label]);
@@ -176,5 +261,17 @@ export default class GameOverScene extends Phaser.Scene {
             }
             callback();
         });
+    }
+
+    cleanupAndNavigate(targetScene, data = {}) {
+        ['GameOverScene', 'InteriorScene', 'UIScene', 'GameScene', 'CharacterSelectScene', 'LobbyScene'].forEach(key => {
+            if (this.scene.manager.getScene(key)) {
+                this.scene.stop(key);
+            }
+        });
+        if (targetScene === 'MenuScene' && window.socketClient) {
+            window.socketClient.disconnect();
+        }
+        this.scene.start(targetScene, data);
     }
 }
