@@ -315,8 +315,9 @@ export class ChatBox {
             return true;
         }).slice(-4);
 
-        filtered.forEach((msg, idx) => {
-            const y = idx * 21;
+        let currentY = 0;
+
+        filtered.forEach((msg) => {
             const isAlert = msg.category === 'ALERT';
             const isSystem = msg.category === 'SYSTEM';
 
@@ -324,26 +325,27 @@ export class ChatBox {
             let badgeBgColor = isAlert ? 0x7F1D1D : isSystem ? 0x451A03 : 0x29221D;
             let badgeStroke = isAlert ? 0xDC2626 : isSystem ? 0xD97706 : 0x785338;
 
-            const badgeBg = this.scene.add.rectangle(0, y + 9, 56, 15, badgeBgColor, 0.9).setOrigin(0, 0.5);
+            const badgeBg = this.scene.add.rectangle(0, currentY + 8, 56, 15, badgeBgColor, 0.9).setOrigin(0, 0.5);
             badgeBg.setStrokeStyle(1, badgeStroke, 0.8);
 
-            const badgeText = this.scene.add.text(28, y + 9, msg.category.substring(0, 7), {
-                fontFamily: 'Dogica, monospace',
+            const badgeText = this.scene.add.text(28, currentY + 8, msg.category.substring(0, 7), {
+                fontFamily: 'DogicaBold, Dogica, monospace',
                 fontSize: '6.5px',
                 color: badgeColor,
                 letterSpacing: 0.5
             }).setOrigin(0.5, 0.5);
 
             let cleanText = msg.text;
-            if (cleanText.length > 46) cleanText = cleanText.substring(0, 44) + '…';
+            if (cleanText.length > 44) cleanText = cleanText.substring(0, 42) + '…';
 
-            const bodyText = this.scene.add.text(64, y + 9, cleanText, {
+            const bodyText = this.scene.add.text(64, currentY + 8, cleanText, {
                 fontFamily: 'Dogica, monospace',
                 fontSize: '7px',
                 color: msg.accentColor || '#FDFBF7'
             }).setOrigin(0, 0.5);
 
             this.messagesContainer.add([badgeBg, badgeText, bodyText]);
+            currentY += 21;
         });
     }
 
@@ -356,10 +358,11 @@ export class ChatBox {
             if (this.filter === 'SYSTEM') return msg.category === 'SYSTEM' || msg.category === 'ALERT';
             if (this.filter === 'CHAT') return msg.category !== 'SYSTEM' && msg.category !== 'ALERT';
             return true;
-        }).slice(-11);
+        }).slice(-7);
 
-        filtered.forEach((msg, idx) => {
-            const y = idx * 24;
+        let currentY = 0;
+
+        filtered.forEach((msg) => {
             const isAlert = msg.category === 'ALERT';
             const isSystem = msg.category === 'SYSTEM';
 
@@ -367,23 +370,28 @@ export class ChatBox {
             let badgeBgColor = isAlert ? 0x7F1D1D : isSystem ? 0x451A03 : 0x29221D;
             let badgeStroke = isAlert ? 0xDC2626 : isSystem ? 0xD97706 : 0x785338;
 
-            const badgeBg = this.scene.add.rectangle(0, y + 9, 64, 16, badgeBgColor, 0.9).setOrigin(0, 0.5);
-            badgeBg.setStrokeStyle(1, badgeStroke, 0.85);
+            const badgeBg = this.scene.add.rectangle(0, currentY + 10, 68, 18, badgeBgColor, 0.95).setOrigin(0, 0.5);
+            badgeBg.setStrokeStyle(1.2, badgeStroke, 0.9);
 
-            const badgeText = this.scene.add.text(32, y + 9, msg.category.substring(0, 8), {
+            const badgeText = this.scene.add.text(34, currentY + 10, msg.category.substring(0, 8), {
                 fontFamily: 'DogicaBold, Dogica, monospace',
-                fontSize: '6.5px',
-                color: badgeColor
+                fontSize: '7px',
+                color: badgeColor,
+                letterSpacing: 0.5
             }).setOrigin(0.5, 0.5);
 
-            const bodyText = this.scene.add.text(74, y + 9, msg.text, {
+            const bodyText = this.scene.add.text(78, currentY + 2, msg.text, {
                 fontFamily: 'Dogica, monospace',
-                fontSize: '7.5px',
+                fontSize: '8px',
                 color: msg.accentColor || '#FDFBF7',
-                wordWrap: { width: this.expModalW - 120 }
-            }).setOrigin(0, 0.5);
+                lineSpacing: 5,
+                wordWrap: { width: this.expModalW - 130 }
+            }).setOrigin(0, 0);
 
             this.expMessagesContainer.add([badgeBg, badgeText, bodyText]);
+
+            const itemH = Math.max(26, bodyText.height + 12);
+            currentY += itemH;
         });
     }
 
