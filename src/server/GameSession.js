@@ -173,9 +173,25 @@ class GameSession {
                         animation: `avatar_${bot.avatarId || '01'}_walk_${dx > 0 ? 'east' : 'west'}`
                     }, bot.id);
                 } else if (this.currentPhase === 'JUDGEMENT_PHASE') {
-                    if (this.nominatedPlayerId && !this.votes.has(bot.id)) {
-                        const choice = Math.random() > 0.4 ? 'FORGIVE' : 'BAN';
-                        this.handleVote(bot.id, choice);
+                    if (!this.votes.has(bot.id)) {
+                        const human = Array.from(this.players.values()).find(p => !p.isBot && p.isAlive);
+                        let botChoice = 'SKIP';
+                        if (human && this.votes.has(human.id)) {
+                            const humanVote = this.votes.get(human.id);
+                            if (humanVote && humanVote !== 'SKIP' && humanVote !== 'FORGIVE') {
+                                botChoice = Math.random() < 0.65 ? humanVote : 'SKIP';
+                            } else {
+                                botChoice = 'SKIP';
+                            }
+                        } else {
+                            if (Math.random() < 0.35) {
+                                const livingOther = this.getAlivePlayers().filter(p => p.id !== bot.id);
+                                if (livingOther.length > 0) {
+                                    botChoice = livingOther[Math.floor(Math.random() * livingOther.length)].id;
+                                }
+                            }
+                        }
+                        this.handleVote(bot.id, botChoice);
                     }
                 }
             }
@@ -372,9 +388,35 @@ class GameSession {
             p.hasPlantedFragmentThisNight = false;
         });
 
-        // Announce Daybreak eviction report from previous night if any
+        // Apply pending eviction and deliver Daybreak Report on the morning of the new Day Phase
+        if (this.pendingEviction) {
+            const ev = this.pendingEviction;
+            const target = this.players.get(ev.playerId);
+            if (target) {
+                target.isAlive = false;
+                this.evictionHistory.push({
+                    playerId: target.id,
+                    playerName: target.name,
+                    role: target.role,
+                    day: ev.day
+                });
+
+                this.broadcast({
+                    type: 'PLAYER_EVICTED',
+                    playerId: target.id,
+                    playerName: target.name,
+                    role: target.role
+                });
+            }
+            this.pendingEviction = null;
+        }
+
         if (this.pendingDaybreakReport) {
             const rpt = this.pendingDaybreakReport;
+            this.broadcast({
+                type: 'DAYBREAK_REPORT',
+                report: rpt
+            });
             this.broadcast({
                 type: 'CHAT_MESSAGE',
                 senderId: 'SYSTEM',
@@ -389,6 +431,12 @@ class GameSession {
                 color: rpt.color
             });
             this.pendingDaybreakReport = null;
+
+            const winCheck = this.checkWinConditions();
+            if (winCheck.isGameOver) {
+                this.endGame(winCheck.winner, winCheck.reason);
+                return;
+            }
         }
 
         this.broadcast({
@@ -429,11 +477,20 @@ class GameSession {
             spawnPositions[p.id] = { x: p.x, y: p.y };
         });
 
+        const livingList = living.map(p => ({
+            id: p.id,
+            name: p.name,
+            slot: p.slot,
+            avatarId: p.avatarId,
+            isBot: !!p.isBot
+        }));
+
         this.broadcast({
             type: 'PHASE_CHANGE',
             phase: 'JUDGEMENT_PHASE',
             duration: 60, // 1 minute
             dayNumber: this.currentDayNumber,
+            livingPlayers: livingList,
             spawnPositions
         });
 
@@ -442,57 +499,72 @@ class GameSession {
     }
 
     resolveJudgement() {
-        if (this.nominatedPlayerId) {
-            const livingPlayers = this.getAlivePlayers();
-            const totalVoters = livingPlayers.length;
-            let banVotes = 0;
-            let forgiveVotes = 0;
+        const livingPlayers = this.getAlivePlayers();
+        const voteCounts = new Map(); // choice -> count
 
-            this.votes.forEach((choice) => {
-                if (choice === 'BAN') banVotes++;
-                else if (choice === 'FORGIVE') forgiveVotes++;
-            });
+        this.votes.forEach((choice) => {
+            const cur = voteCounts.get(choice) || 0;
+            voteCounts.set(choice, cur + 1);
+        });
 
-            const target = this.players.get(this.nominatedPlayerId);
-            if (banVotes > totalVoters / 2 && target) {
-                target.isAlive = false;
-                this.evictionHistory.push({
+        let topCandidate = null;
+        let maxVotes = 0;
+        const skipVotes = (voteCounts.get('SKIP') || 0) + (voteCounts.get('FORGIVE') || 0);
+
+        voteCounts.forEach((count, choice) => {
+            if (choice !== 'SKIP' && choice !== 'FORGIVE') {
+                if (count > maxVotes) {
+                    maxVotes = count;
+                    topCandidate = choice;
+                }
+            }
+        });
+
+        // In custom rooms with bots, the human player's vote determines the council's verdict
+        const human = Array.from(this.players.values()).find(p => !p.isBot && p.isAlive);
+        if (human && this.votes.has(human.id)) {
+            const hChoice = this.votes.get(human.id);
+            if (hChoice && hChoice !== 'SKIP' && hChoice !== 'FORGIVE') {
+                topCandidate = hChoice;
+                maxVotes = Math.max(maxVotes, skipVotes + 1);
+            } else if (hChoice === 'SKIP' || hChoice === 'FORGIVE') {
+                topCandidate = null;
+            }
+        }
+
+        if (topCandidate && maxVotes > 0) {
+            const target = this.players.get(topCandidate);
+            if (target && target.isAlive) {
+                const isInstigator = target.role === 'INSTIGATOR';
+                this.pendingEviction = {
                     playerId: target.id,
                     playerName: target.name,
                     role: target.role,
                     day: this.currentDayNumber
-                });
-
-                this.broadcast({
-                    type: 'PLAYER_EVICTED',
+                };
+                this.pendingDaybreakReport = {
+                    evicted: true,
                     playerId: target.id,
                     playerName: target.name,
-                    role: target.role
-                });
-
-                // Set pending daybreak report for next day
-                this.pendingDaybreakReport = {
-                    message: `📢 [DAYBREAK REPORT] ${target.name} was banished by the council! Role revealed: ${target.role}.`,
+                    role: target.role,
+                    votes: maxVotes,
+                    message: `📢 [DAYBREAK REPORT] ${target.name} was banished by the council! Secret role revealed: ${target.role}.`,
                     shortText: `EVICTED: ${target.name} (${target.role})`,
-                    color: '#EF4444'
+                    color: isInstigator ? '#10B981' : '#EF4444'
                 };
-
-                const winCheck = this.checkWinConditions();
-                if (winCheck.isGameOver) {
-                    this.endGame(winCheck.winner, winCheck.reason);
-                    return;
-                }
             } else {
                 this.pendingDaybreakReport = {
+                    evicted: false,
                     message: `📢 [DAYBREAK REPORT] The council chose not to banish anyone last night.`,
-                    shortText: `COUNCIL TIED - NO EVICTION`,
-                    color: '#F59E0B'
+                    shortText: `COUNCIL TIED / SKIPPED`,
+                    color: '#94A3B8'
                 };
             }
         } else {
             this.pendingDaybreakReport = {
-                message: `📢 [DAYBREAK REPORT] No nominations were completed during the council session.`,
-                shortText: `NO NOMINATION COMPLETED`,
+                evicted: false,
+                message: `📢 [DAYBREAK REPORT] The council chose not to banish anyone last night.`,
+                shortText: `COUNCIL TIED / SKIPPED`,
                 color: '#94A3B8'
             };
         }
@@ -759,9 +831,6 @@ class GameSession {
 
     handleVote(voterId, choice) {
         if (this.currentPhase !== 'JUDGEMENT_PHASE') return;
-        if (!this.nominatedPlayerId) return;
-        if (this.votes.has(voterId)) return;
-
         const voter = this.players.get(voterId);
         if (!voter || !voter.isAlive) return;
 
@@ -770,6 +839,7 @@ class GameSession {
         this.broadcast({
             type: 'VOTE_CAST_UPDATE',
             voterId: voterId,
+            choice: choice,
             totalVotesCast: this.votes.size,
             totalVoters: this.getAlivePlayers().length
         });

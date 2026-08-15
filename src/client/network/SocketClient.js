@@ -78,6 +78,7 @@ export class SocketClient {
             case 'VOTE_CAST_UPDATE': gameEvents.emit('vote:castUpdate', message); break;
             case 'VOTE_RESULT': gameEvents.emit('vote:resultReceived', message); break;
             case 'PLAYER_EVICTED': gameEvents.emit('player:evicted', message); break;
+            case 'DAYBREAK_REPORT': gameEvents.emit('judgement:daybreakReport', message.report); break;
             case 'CHAT_MESSAGE': gameEvents.emit('chat:received', message); break;
             case 'BUILDING_LOCKED': gameEvents.emit('building:locked', message); break;
             case 'GAME_OVER': gameEvents.emit('game:overReceived', message); break;

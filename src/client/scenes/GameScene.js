@@ -569,7 +569,13 @@ export default class GameScene extends Phaser.Scene {
         });
 
         gameEvents.on('vote:nominationReceived', (data) => {
-            this.scene.get('UIScene').showVotingModal(data.nominatedPlayerName);
+            const ui = this.scene.get('UIScene');
+            if (ui && ui.showVotingModal) ui.showVotingModal(data.livingPlayers || this.allPlayers);
+        });
+
+        gameEvents.on('judgement:daybreakReport', (report) => {
+            const ui = this.scene.get('UIScene');
+            if (ui && ui.showDaybreakReportModal) ui.showDaybreakReportModal(report);
         });
 
         gameEvents.on('vote:cast', (data) => {
@@ -579,6 +585,26 @@ export default class GameScene extends Phaser.Scene {
         });
 
         gameEvents.on('player:evicted', (data) => {
+            // Update allPlayers cache
+            if (this.allPlayers) {
+                const pl = this.allPlayers.find(p => p.id === data.playerId || p.playerId === data.playerId);
+                if (pl) {
+                    pl.isEvicted = true;
+                    pl.isDead = true;
+                    pl.role = data.role;
+                }
+            }
+
+            const ui = this.scene.get('UIScene');
+            if (ui && ui.allPlayers) {
+                const pl = ui.allPlayers.find(p => p.id === data.playerId || p.playerId === data.playerId);
+                if (pl) {
+                    pl.isEvicted = true;
+                    pl.isDead = true;
+                    pl.role = data.role;
+                }
+            }
+
             const victim = data.playerId === this.localPlayerId
                 ? this.localPlayer
                 : this.remotePlayers.get(data.playerId);
@@ -686,11 +712,18 @@ export default class GameScene extends Phaser.Scene {
             });
         }
 
-        if (phaseName === PHASES.DAY_PHASE || phaseName === PHASES.JUDGEMENT_PHASE) {
+        if (phaseName === PHASES.DAY_PHASE || phaseName === PHASES.JUDGEMENT_PHASE || phaseName === 'JUDGEMENT_PHASE') {
             if (this.scene.isActive('InteriorScene')) {
                 this.scene.stop('InteriorScene');
                 this.scene.setVisible(true, 'GameScene');
                 this.scene.resume('GameScene');
+            }
+        }
+
+        if (phaseName === PHASES.JUDGEMENT_PHASE || phaseName === 'JUDGEMENT_PHASE') {
+            const ui = this.scene.get('UIScene');
+            if (ui && ui.showVotingModal) {
+                ui.showVotingModal(data.livingPlayers || this.allPlayers);
             }
         }
 

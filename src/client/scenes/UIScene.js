@@ -414,9 +414,134 @@ export default class UIScene extends Phaser.Scene {
         this.activeModal = new RoleAssignmentModal(this, roleData);
     }
 
-    showVotingModal(playerName) {
+    showVotingModal(livingPlayers) {
         if (this.activeModal) this.activeModal.destroy();
-        this.activeModal = new VotingModal(this, { nominatedPlayerName: playerName });
+        this.activeModal = new VotingModal(this, { livingPlayers });
+    }
+
+    showDaybreakReportModal(report) {
+        if (this.activeModal) this.activeModal.destroy();
+
+        const { width, height } = this.cameras.main;
+        const centerX = width / 2;
+        const centerY = height / 2;
+
+        const isEvicted = report && report.evicted;
+        const isInstigator = report && report.role === 'INSTIGATOR';
+
+        const strokeColor = !isEvicted ? 0xF59E0B : (isInstigator ? 0x10B981 : 0xEF4444);
+        const headerBgColor = !isEvicted ? 0x2A1B0E : (isInstigator ? 0x064E3B : 0x450A0A);
+        const headerTextColor = !isEvicted ? '#F59E0B' : (isInstigator ? '#34D399' : '#F87171');
+
+        const modalW = 440;
+        const modalH = 220;
+
+        const container = this.add.container(centerX, centerY).setDepth(2600);
+        this.activeModal = container;
+
+        const modalBg = this.add.rectangle(0, 0, modalW, modalH, 0x140F14, 0.98);
+        modalBg.setStrokeStyle(2, strokeColor, 0.95);
+
+        const headerBg = this.add.rectangle(0, -modalH / 2 + 24, 280, 24, headerBgColor, 0.95);
+        headerBg.setStrokeStyle(1.2, strokeColor, 0.8);
+
+        const headerText = this.add.text(0, -modalH / 2 + 24, '📢 DAYBREAK COUNCIL REPORT', {
+            fontFamily: 'DogicaBold, Dogica, monospace',
+            fontSize: '8px',
+            color: headerTextColor,
+            letterSpacing: 0.5
+        }).setOrigin(0.5);
+
+        let titleStr = '';
+        let roleBadgeStr = '';
+        let descStr = '';
+
+        if (isEvicted) {
+            titleStr = `"${(report.playerName || 'VILLAGER').toUpperCase()}" HAS BEEN BANISHED!`;
+            roleBadgeStr = isInstigator ? 'SECRET ROLE: 🗡️ INSTIGATOR' : 'SECRET ROLE: 🛡️ SURVIVOR';
+            descStr = isInstigator
+                ? 'The town council caught an Instigator! Dusk Village is safer today.'
+                : 'An innocent Survivor was banished from the village... Be careful with future votes!';
+        } else {
+            titleStr = 'NO EVICTION OCCURRED';
+            roleBadgeStr = 'COUNCIL VERDICT: FORGIVE / SKIP';
+            descStr = 'The council chose not to banish anyone last night.\nAll surviving villagers return to the investigation.';
+        }
+
+        const titleText = this.add.text(0, -42, titleStr, {
+            fontFamily: 'DogicaBold, Dogica, monospace',
+            fontSize: '9.5px',
+            color: '#FFF8EE',
+            align: 'center',
+            letterSpacing: 0.5,
+            wordWrap: { width: modalW - 40 }
+        }).setOrigin(0.5);
+
+        const roleBadgeBg = this.add.rectangle(0, -10, 260, 22, isEvicted ? (isInstigator ? 0x065F46 : 0x7F1D1D) : 0x1E293B, 0.95);
+        roleBadgeBg.setStrokeStyle(1, strokeColor, 0.8);
+
+        const roleBadgeText = this.add.text(0, -10, roleBadgeStr, {
+            fontFamily: 'DogicaBold, Dogica, monospace',
+            fontSize: '7.5px',
+            color: isEvicted ? (isInstigator ? '#4ADE80' : '#F87171') : '#CBD5E1'
+        }).setOrigin(0.5);
+
+        const descText = this.add.text(0, 32, descStr, {
+            fontFamily: 'Dogica, monospace',
+            fontSize: '7.5px',
+            color: '#CBD5E1',
+            align: 'center',
+            lineSpacing: 4,
+            wordWrap: { width: modalW - 40 }
+        }).setOrigin(0.5);
+
+        const okBtnBg = this.add.rectangle(0, modalH / 2 - 24, 180, 24, 0x1E293B, 0.95);
+        okBtnBg.setStrokeStyle(1.2, 0x64748B, 0.8);
+        okBtnBg.setInteractive({ useHandCursor: true });
+
+        const okBtnText = this.add.text(0, modalH / 2 - 24, 'CONTINUE INVESTIGATION', {
+            fontFamily: 'Dogica, monospace',
+            fontSize: '7.5px',
+            color: '#F8FAFC'
+        }).setOrigin(0.5);
+
+        const closeModal = () => {
+            if (container && container.active) {
+                this.tweens.add({
+                    targets: container,
+                    alpha: 0,
+                    scaleX: 0.95,
+                    scaleY: 0.95,
+                    duration: 150,
+                    onComplete: () => {
+                        if (container && container.active) container.destroy();
+                        if (this.activeModal === container) this.activeModal = null;
+                    }
+                });
+            }
+        };
+
+        okBtnBg.on('pointerdown', closeModal);
+        okBtnBg.on('pointerover', () => okBtnBg.setFillStyle(0x334155));
+        okBtnBg.on('pointerout', () => okBtnBg.setFillStyle(0x1E293B));
+
+        container.add([modalBg, headerBg, headerText, titleText, roleBadgeBg, roleBadgeText, descText, okBtnBg, okBtnText]);
+
+        container.setAlpha(0);
+        container.setScale(0.92);
+        this.tweens.add({
+            targets: container,
+            alpha: 1,
+            scaleX: 1,
+            scaleY: 1,
+            duration: 150,
+            ease: 'Back.out'
+        });
+
+        // Auto close after 7 seconds if not dismissed
+        this.time.delayedCall(7000, () => {
+            if (this.activeModal === container) closeModal();
+        });
     }
 
     showInitiationModal(role) {
