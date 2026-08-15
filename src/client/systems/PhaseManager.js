@@ -179,6 +179,7 @@ export class PhaseManager {
         this.timeRemaining--;
 
         gameEvents.emit('phase:timerTick', {
+            phase: this.currentPhase,
             remaining: this.timeRemaining,
             total: this.totalDuration,
             displayString: formatTime(this.timeRemaining)

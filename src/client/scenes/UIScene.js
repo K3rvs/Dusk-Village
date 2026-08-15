@@ -201,7 +201,8 @@ export default class UIScene extends Phaser.Scene {
         const timerPillBg = this.add.rectangle(centerX, centerY + 92, 340, 38, 0x1A141A, 0.96);
         timerPillBg.setStrokeStyle(1.6, 0xF59E0B, 0.9);
 
-        const initialDuration = (this.gameScene && this.gameScene.phaseManager) ? this.gameScene.phaseManager.timeRemaining : 15;
+        const pm = (this.gameScene && this.gameScene.phaseManager) ? this.gameScene.phaseManager : null;
+        const initialDuration = pm ? Math.min(15, Math.max(0, pm.timeRemaining)) : 15;
         this.initiationTimerText = this.add.text(centerX, centerY + 90, `⏳ STAY INSIDE: ${initialDuration}s`, {
             fontFamily: 'DogicaBold, Dogica, monospace',
             fontSize: '11px',
@@ -290,32 +291,8 @@ export default class UIScene extends Phaser.Scene {
             ease: 'Back.out'
         });
 
-        // Dedicated 15-second per-second countdown
-        let secondsRemaining = 15;
-        const totalDuration = 15;
-
-        const timerEvent = this.time.addEvent({
-            delay: 1000,
-            repeat: 14,
-            callback: () => {
-                secondsRemaining--;
-                if (this.initiationTimerText && this.initiationTimerText.active) {
-                    this.initiationTimerText.setText(`⏳ STAY INSIDE: ${Math.max(0, secondsRemaining)}s`);
-                }
-                if (miniText && miniText.active) {
-                    miniText.setText(`${roleIcon} ${role} | ⏳ STAY INSIDE: ${Math.max(0, secondsRemaining)}s | [↗ EXPAND]`);
-                }
-                if (timerDecayBar && timerDecayBar.active) {
-                    timerDecayBar.scaleX = Math.max(0, secondsRemaining / totalDuration);
-                }
-                if (secondsRemaining <= 0) {
-                    closeModal();
-                }
-            }
-        });
-
         const cleanupListeners = () => {
-            if (timerEvent) timerEvent.remove();
+            gameEvents.off('phase:timerTick', onTick);
             gameEvents.off('phase:changed', onPhaseEnd);
             gameEvents.off('phase:serverChanged', onPhaseEnd);
         };
@@ -339,6 +316,32 @@ export default class UIScene extends Phaser.Scene {
             gameEvents.emit('interior:unlockInitiation');
         };
 
+        const onTick = (data) => {
+            const phaseName = (data.phase || (pm ? pm.currentPhase : '')).toUpperCase();
+            if (phaseName && phaseName !== 'ROLE_ASSIGNMENT') {
+                closeModal();
+                return;
+            }
+
+            const rem = data.remaining !== undefined ? data.remaining : 0;
+            const tot = data.total || 15;
+
+            if (rem <= 0 || rem > 20) {
+                closeModal();
+                return;
+            }
+
+            if (this.initiationTimerText && this.initiationTimerText.active) {
+                this.initiationTimerText.setText(`⏳ STAY INSIDE: ${rem}s`);
+            }
+            if (miniText && miniText.active) {
+                miniText.setText(`${roleIcon} ${role} | ⏳ STAY INSIDE: ${rem}s | [↗ EXPAND]`);
+            }
+            if (timerDecayBar && timerDecayBar.active) {
+                timerDecayBar.scaleX = Math.max(0, Math.min(1, rem / tot));
+            }
+        };
+
         const onPhaseEnd = (data) => {
             const p = (data.phase || data.to || '').toUpperCase();
             if (p === 'DAY_PHASE' || p === 'JUDGEMENT_PHASE' || p === 'NIGHT_PHASE') {
@@ -346,6 +349,7 @@ export default class UIScene extends Phaser.Scene {
             }
         };
 
+        gameEvents.on('phase:timerTick', onTick);
         gameEvents.on('phase:changed', onPhaseEnd);
         gameEvents.on('phase:serverChanged', onPhaseEnd);
     }
