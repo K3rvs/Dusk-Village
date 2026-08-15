@@ -387,65 +387,19 @@ export default class InteriorScene extends Phaser.Scene {
 
     startVerification() {
         this.isVerifying = true;
-        
-        const screenCenterX = this.cameras.main.width / 2;
-        const screenCenterY = this.cameras.main.height / 2;
-
-        const barWidth = 340;
-        const barHeight = 24;
-
-        const overlay = this.add.rectangle(screenCenterX, screenCenterY, 4000, 4000, 0x000000, 0.45)
-            .setScrollFactor(0).setDepth(2000);
-
-        const container = this.add.container(screenCenterX, screenCenterY - 60).setScrollFactor(0).setDepth(2001);
-
-        const modalBg = this.add.rectangle(0, 0, barWidth + 48, 86, 0x140F14, 0.98);
-        modalBg.setStrokeStyle(2, 0xF59E0B, 0.95);
-
-        const label = this.add.text(0, -22, '🔍 VERIFYING DOCUMENT METADATA...', {
-            fontFamily: 'DogicaBold, Dogica, monospace',
-            fontSize: '9.5px',
-            color: '#F59E0B',
-            letterSpacing: 1
-        }).setOrigin(0.5);
-
-        const bgBar = this.add.rectangle(-barWidth / 2, 12, barWidth, barHeight, 0x0F172A, 0.95).setOrigin(0, 0.5);
-        bgBar.setStrokeStyle(1.5, 0x334155, 0.9);
-
-        const fillBar = this.add.rectangle(-barWidth / 2 + 2, 12, 0, barHeight - 4, 0x10B981).setOrigin(0, 0.5);
-        
-        const percentText = this.add.text(0, 12, '0%', {
-            fontFamily: 'Dogica, monospace',
-            fontSize: '9px',
-            color: '#FFFFFF'
-        }).setOrigin(0.5);
-
-        container.add([modalBg, label, bgBar, fillBar, percentText]);
-
-        let progress = 0;
-        this.time.addEvent({
-            delay: 50,
-            repeat: 39,
-            callback: () => {
-                progress += 0.025;
-                fillBar.width = (barWidth - 4) * Math.min(1, progress);
-                percentText.setText(`${Math.round(Math.min(100, progress * 100))}%`);
-
-                if (progress >= 1.0) {
-                    this.isVerifying = false;
-                    overlay.destroy();
-                    container.destroy();
-
-                    if (window.socketClient) {
-                        window.socketClient.send({
-                            type: 'VERIFICATION_COMPLETE',
-                            playerAId: this.localPlayer.id,
-                            playerBId: this.localPlayer.id
-                        });
-                    }
+        const uiScene = this.scene.get('UIScene');
+        if (uiScene && typeof uiScene.showVerificationProgress === 'function') {
+            uiScene.showVerificationProgress(() => {
+                this.isVerifying = false;
+                if (window.socketClient) {
+                    window.socketClient.send({
+                        type: 'VERIFICATION_COMPLETE',
+                        playerAId: this.localPlayer.id,
+                        playerBId: this.localPlayer.id
+                    });
                 }
-            }
-        });
+            });
+        }
     }
 
     setupExitDoor(exitX, exitY) {

@@ -62,6 +62,78 @@ export default class UIScene extends Phaser.Scene {
         }
     }
 
+    showVerificationProgress(onComplete) {
+        const { width, height } = this.cameras.main;
+        const centerX = width / 2;
+        const centerY = height / 2 - 30;
+
+        const modalW = 340;
+        const modalH = 74;
+        const barW = 260;
+        const barH = 18;
+
+        const container = this.add.container(centerX, centerY).setDepth(2500);
+
+        const modalBg = this.add.rectangle(0, 0, modalW, modalH, 0x140F14, 0.98);
+        modalBg.setStrokeStyle(1.8, 0xF59E0B, 0.95);
+
+        const titleText = this.add.text(0, -18, '🔍 VERIFYING DOCUMENT METADATA...', {
+            fontFamily: 'DogicaBold, Dogica, monospace',
+            fontSize: '8.5px',
+            color: '#F59E0B',
+            letterSpacing: 0.5
+        }).setOrigin(0.5);
+
+        const bgBar = this.add.rectangle(-barW / 2, 12, barW, barH, 0x0F172A, 0.95).setOrigin(0, 0.5);
+        bgBar.setStrokeStyle(1.2, 0x334155, 0.9);
+
+        const fillBar = this.add.rectangle(-barW / 2 + 2, 12, 0, barH - 4, 0x10B981).setOrigin(0, 0.5);
+
+        const percentText = this.add.text(0, 12, '0%', {
+            fontFamily: 'Dogica, monospace',
+            fontSize: '8px',
+            color: '#FFFFFF'
+        }).setOrigin(0.5);
+
+        container.add([modalBg, titleText, bgBar, fillBar, percentText]);
+
+        container.setAlpha(0);
+        container.setScale(0.92);
+        this.tweens.add({
+            targets: container,
+            alpha: 1,
+            scaleX: 1,
+            scaleY: 1,
+            duration: 150,
+            ease: 'Back.out'
+        });
+
+        let progress = 0;
+        this.time.addEvent({
+            delay: 50,
+            repeat: 39,
+            callback: () => {
+                progress += 0.025;
+                fillBar.width = (barW - 4) * Math.min(1, progress);
+                percentText.setText(`${Math.round(Math.min(100, progress * 100))}%`);
+
+                if (progress >= 1.0) {
+                    this.tweens.add({
+                        targets: container,
+                        alpha: 0,
+                        scaleX: 0.95,
+                        scaleY: 0.95,
+                        duration: 150,
+                        onComplete: () => {
+                            container.destroy();
+                            if (onComplete) onComplete();
+                        }
+                    });
+                }
+            }
+        });
+    }
+
     showSolveMysteryModal(mysteryData) {
         if (this.activeModal) this.activeModal.destroy();
         this.activeModal = new SolveMysteryModal(this, mysteryData);
