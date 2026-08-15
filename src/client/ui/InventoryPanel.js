@@ -8,6 +8,8 @@ export class InventoryPanel {
 
         this.panelW = 230;
         this.panelH = 98;
+        this.hasFragment = false;
+        this.heldFragmentData = null;
 
         this.container = scene.add.container(width - 16 - this.panelW, height - this.panelH - 16);
         this.container.setScrollFactor(0);
@@ -61,7 +63,7 @@ export class InventoryPanel {
             color: '#FFF8EE'
         }).setOrigin(0, 0.5).setVisible(false);
 
-        this.actionHint = scene.add.text(46, 72, 'Verify at Library [E]', {
+        this.actionHint = scene.add.text(46, 72, 'Click to Inspect / [Q] Drop', {
             fontFamily: 'Dogica, monospace',
             fontSize: '6px',
             color: '#D4C3B3'
@@ -81,27 +83,19 @@ export class InventoryPanel {
             this.actionHint
         ]);
 
+        this.slotCard.on('pointerover', () => {
+            if (this.hasFragment) this.slotCard.setFillStyle(0x281F28, 0.98);
+        });
+
+        this.slotCard.on('pointerout', () => {
+            this.slotCard.setFillStyle(0x1A141A, 0.92);
+        });
+
         this.slotCard.on('pointerdown', () => {
-            if (this.hasFragment) {
-                const interior = this.scene.scene.get('InteriorScene');
-                const gameScene = this.scene.scene.get('GameScene');
-                let posX = 768;
-                let posY = 580;
-                let loc = 'EXTERIOR';
-
-                if (interior && interior.scene.isActive() && interior.playerSprite) {
-                    posX = Math.round(interior.playerSprite.x / 16) * 16;
-                    posY = Math.round(interior.playerSprite.y / 16) * 16;
-                    loc = interior.buildingType ? interior.buildingType.toUpperCase() : 'EXTERIOR';
-                } else if (gameScene && gameScene.localPlayer && gameScene.localPlayer.sprite) {
-                    posX = Math.round(gameScene.localPlayer.sprite.x / 16) * 16;
-                    posY = Math.round(gameScene.localPlayer.sprite.y / 16) * 16;
+            if (this.hasFragment && this.heldFragmentData) {
+                if (this.scene.showDocumentInspectionModal) {
+                    this.scene.showDocumentInspectionModal(this.heldFragmentData);
                 }
-
-                gameEvents.emit('fragment:attemptDrop', {
-                    position: { x: posX, y: posY },
-                    location: loc
-                });
             }
         });
 
@@ -116,6 +110,7 @@ export class InventoryPanel {
         gameEvents.on('inventory:updated', (data) => {
             if (data.fragment) {
                 this.hasFragment = true;
+                this.heldFragmentData = data.fragment;
                 const frag = data.fragment;
 
                 this.emptyText.setVisible(false);
@@ -133,26 +128,27 @@ export class InventoryPanel {
                     this.statusBadge.setText('[ UNVERIFIED 🔍 ]');
                     this.statusBadge.setColor('#F59E0B');
                     this.statusBadge.setBackgroundColor('#451A03');
-                    this.actionHint.setText('Verify at Library [E] / Drop [Q]');
+                    this.actionHint.setText('Click to Inspect / Drop [Q]');
                     this.actionHint.setColor('#F59E0B');
                     this.bg.setStrokeStyle(1.8, 0xF59E0B, 0.9);
                 } else if (frag.isAuthentic) {
                     this.statusBadge.setText(`[ ${frag.type} AUTHENTIC ✓ ]`);
                     this.statusBadge.setColor('#4ADE80');
                     this.statusBadge.setBackgroundColor('#064E3B');
-                    this.actionHint.setText('Deliver to Village Hall [E]');
+                    this.actionHint.setText('Click to Inspect / File [E]');
                     this.actionHint.setColor('#4ADE80');
                     this.bg.setStrokeStyle(1.8, 0x10B981, 0.95);
                 } else {
                     this.statusBadge.setText('[ IRRELEVANT ✗ ]');
                     this.statusBadge.setColor('#F87171');
                     this.statusBadge.setBackgroundColor('#450A0A');
-                    this.actionHint.setText('Drop item [Q] to find real clue');
+                    this.actionHint.setText('Click to Inspect / Drop [Q]');
                     this.actionHint.setColor('#EF4444');
                     this.bg.setStrokeStyle(1.8, 0xEF4444, 0.9);
                 }
             } else {
                 this.hasFragment = false;
+                this.heldFragmentData = null;
                 this.emptyText.setVisible(true);
                 this.itemIconBg.setVisible(false);
                 this.fragIcon.setVisible(false);

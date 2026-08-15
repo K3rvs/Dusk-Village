@@ -10,34 +10,35 @@ export class PlayerListPanel {
         this.container.setScrollFactor(0);
         this.container.setDepth(300);
 
-        this.panelW = 184;
+        this.panelW = 216;
         this.panelH = 316;
 
         // Warm Espresso Walnut Glass Panel
-        this.bg = scene.add.rectangle(0, 0, this.panelW, this.panelH, 0x181311, 0.94).setOrigin(0, 0);
-        this.bg.setStrokeStyle(1.5, 0x785338, 0.85);
+        this.bg = scene.add.rectangle(0, 0, this.panelW, this.panelH, 0x181311, 0.95).setOrigin(0, 0);
+        this.bg.setStrokeStyle(1.6, 0x785338, 0.9);
 
         // Header Title Bar (Clickable to collapse/expand)
         this.header = scene.add.rectangle(0, 0, this.panelW, 26, 0x231E1B, 0.95).setOrigin(0, 0).setInteractive({ useHandCursor: true });
         this.headerBorder = scene.add.rectangle(0, 26, this.panelW, 1, 0xD97706, 0.7).setOrigin(0, 0);
+        
         this.headerText = scene.add.text(10, 13, 'VILLAGERS', {
-            fontFamily: 'Dogica, monospace',
+            fontFamily: 'DogicaBold, Dogica, monospace',
             fontSize: '8px',
             color: '#F59E0B',
             letterSpacing: 1
         }).setOrigin(0, 0.5);
 
-        this.aliveCountText = scene.add.text(this.panelW - 28, 13, '10/10', {
-            fontFamily: 'Dogica, monospace',
-            fontSize: '8px',
+        this.aliveCountText = scene.add.text(this.panelW - 42, 13, '10/10', {
+            fontFamily: 'DogicaBold, Dogica, monospace',
+            fontSize: '7.5px',
             color: '#4ADE80'
         }).setOrigin(1, 0.5);
 
-        this.toggleBtn = scene.add.text(this.panelW - 10, 13, '[-]', {
+        this.toggleBtn = scene.add.text(this.panelW - 14, 13, '[-]', {
             fontFamily: 'Dogica, monospace',
             fontSize: '8px',
             color: '#A89F91'
-        }).setOrigin(1, 0.5);
+        }).setOrigin(0.5, 0.5);
 
         this.slotsContainer = scene.add.container(0, 0);
 
@@ -54,12 +55,8 @@ export class PlayerListPanel {
         this.slots = [];
         for (let i = 0; i < 10; i++) {
             const y = 32 + i * 28;
-            const slotBg = scene.add.rectangle(6, y, this.panelW - 12, 25, 0x231E1B, 0.9).setOrigin(0, 0).setInteractive({ useHandCursor: true });
+            const slotBg = scene.add.rectangle(6, y, this.panelW - 12, 25, 0x231E1B, 0.9).setOrigin(0, 0);
             slotBg.setStrokeStyle(1, 0x3D322A, 0.8);
-
-            // Hover effect
-            slotBg.on('pointerover', () => slotBg.setFillStyle(0x322822, 0.95));
-            slotBg.on('pointerout', () => slotBg.setFillStyle(0x231E1B, 0.9));
 
             // Avatar Frame & Sprite
             const avatarFrame = scene.add.rectangle(18, y + 12.5, 18, 18, 0x181311, 1);
@@ -70,16 +67,16 @@ export class PlayerListPanel {
             // Player Name Text
             const nameText = scene.add.text(32, y + 12.5, `Player ${i + 1}`, {
                 fontFamily: 'Dogica, monospace',
-                fontSize: '7.5px',
+                fontSize: '7px',
                 color: '#FDFBF7'
             }).setOrigin(0, 0.5);
 
-            // Status Pill
-            const statusBg = scene.add.rectangle(this.panelW - 30, y + 12.5, 38, 14, 0x14532D, 0.9);
+            // Status Pill (ALIVE / DEAD)
+            const statusBg = scene.add.rectangle(this.panelW - 30, y + 12.5, 42, 16, 0x14532D, 0.9);
             statusBg.setStrokeStyle(1, 0x15803D, 0.9);
 
             const statusText = scene.add.text(this.panelW - 30, y + 12.5, 'ALIVE', {
-                fontFamily: 'Dogica, monospace',
+                fontFamily: 'DogicaBold, Dogica, monospace',
                 fontSize: '6.5px',
                 color: '#4ADE80',
                 letterSpacing: 0.5
@@ -121,8 +118,12 @@ export class PlayerListPanel {
                 if (!isEvicted) aliveCount++;
 
                 let displayName = p.name || (p.isBot ? `Bot ${p.botId || idx + 1}` : `Player ${idx + 1}`);
-                if (displayName.length > 8) displayName = displayName.substring(0, 7) + '..';
-                if (isLocal) displayName += ' (YOU)';
+                if (isLocal) {
+                    if (displayName.length > 9) displayName = displayName.substring(0, 7) + '..';
+                    displayName += ' (YOU)';
+                } else {
+                    if (displayName.length > 13) displayName = displayName.substring(0, 11) + '..';
+                }
 
                 s.nameText.setText(displayName);
                 s.nameText.setColor(isLocal ? '#F59E0B' : '#FDFBF7');

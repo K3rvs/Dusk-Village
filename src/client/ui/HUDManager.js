@@ -76,10 +76,11 @@ export class HUDManager {
         const isDanger = colorStr === '#EF4444' || colorStr === '#DC2626' || text.toLowerCase().includes('lock') || text.toLowerCase().includes('evict');
         const tag = isDanger ? '[ ALERT ]' : text.toLowerCase().includes('verified') ? '[ VERIFIED ]' : '[ NOTICE ]';
 
-        // Strip any unicode emojis from text if passed
-        const cleanText = text.replace(/[\u{1F600}-\u{1F6FF}|[\u{1F300}-\u{1F5FF}|[\u{1F680}-\u{1F6FF}|[\u{1F700}-\u{1F77F}|[\u{1F780}-\u{1F7FF}|[\u{1F800}-\u{1F8FF}|[\u{1F900}-\u{1F9FF}|[\u{1FA00}-\u{1FA6F}|[\u{1FA70}-\u{1FAFF}|[\u{2600}-\u{26FF}|[\u{2700}-\u{27BF}]/gu, '').trim();
+        let cleanText = text.replace(/\[\s*(NOTICE|ALERT|VERIFIED|INFO)\s*\]/gi, '').trim();
+        cleanText = cleanText.replace(/[\u{1F600}-\u{1F6FF}|[\u{1F300}-\u{1F5FF}|[\u{1F680}-\u{1F6FF}|[\u{1F700}-\u{1F77F}|[\u{1F780}-\u{1F7FF}|[\u{1F800}-\u{1F8FF}|[\u{1F900}-\u{1F9FF}|[\u{1FA00}-\u{1FA6F}|[\u{1FA70}-\u{1FAFF}|[\u{2600}-\u{26FF}|[\u{2700}-\u{27BF}]/gu, '').trim();
+        if (cleanText.length === 0) cleanText = text.trim();
 
-        const toastW = Math.min(500, Math.max(260, cleanText.length * 8 + 90));
+        const toastW = Math.min(520, Math.max(300, cleanText.length * 8 + 110));
         const toastH = 34;
         const toastY = 86;
 
@@ -89,18 +90,27 @@ export class HUDManager {
         const toastBg = this.scene.add.rectangle(0, 0, toastW, toastH, 0x140F14, 0.96);
         toastBg.setStrokeStyle(1.6, colorNum, 0.95);
 
-        const fullMessage = `${tag}  ${cleanText.toUpperCase()}`;
-        const toastText = this.scene.add.text(0, 0, fullMessage, {
+        // Separate tag badge & message text to prevent any overlap
+        const tagBg = this.scene.add.rectangle(-toastW / 2 + 46, 0, 76, 20, isDanger ? 0x7F1D1D : 0x2A1B0E, 0.95);
+        tagBg.setStrokeStyle(1, colorNum, 0.85);
+
+        const tagText = this.scene.add.text(-toastW / 2 + 46, 0, tag, {
+            fontFamily: 'DogicaBold, Dogica, monospace',
+            fontSize: '6.5px',
+            color: isDanger ? '#F87171' : '#F59E0B'
+        }).setOrigin(0.5);
+
+        const toastText = this.scene.add.text(-toastW / 2 + 92, 0, cleanText.toUpperCase(), {
             fontFamily: 'Dogica, monospace',
             fontSize: '7.5px',
             color: isDanger ? '#F87171' : colorStr || '#FDFBF7',
-            letterSpacing: 0.5
-        }).setOrigin(0.5);
+            wordWrap: { width: toastW - 100 }
+        }).setOrigin(0, 0.5);
 
         // Progress decay bar
         const progressBar = this.scene.add.rectangle(0, toastH / 2 - 2, toastW - 4, 2, colorNum, 0.85);
 
-        container.add([toastBg, progressBar, toastText]);
+        container.add([toastBg, tagBg, tagText, toastText, progressBar]);
         container.setAlpha(0);
 
         // Slide down + Fade in

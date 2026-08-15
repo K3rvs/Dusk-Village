@@ -134,6 +134,205 @@ export default class UIScene extends Phaser.Scene {
         });
     }
 
+    showDocumentInspectionModal(fragment) {
+        if (this.activeModal) this.activeModal.destroy();
+        if (!fragment) return;
+
+        const { width, height } = this.cameras.main;
+        const centerX = width / 2;
+        const centerY = height / 2;
+
+        const isVerified = !!fragment.isVerified;
+        const isAuth = !!fragment.isAuthentic;
+
+        const strokeColor = !isVerified ? 0xF59E0B : (isAuth ? 0x10B981 : 0xEF4444);
+        const headerBgColor = !isVerified ? 0x2A1B0E : (isAuth ? 0x064E3B : 0x450A0A);
+        const headerTextColor = !isVerified ? '#F59E0B' : (isAuth ? '#34D399' : '#F87171');
+
+        const modalW = 460;
+        const modalH = 260;
+
+        const container = this.add.container(centerX, centerY).setDepth(2600);
+        this.activeModal = container;
+
+        // Dim backdrop
+        const dimmer = this.add.rectangle(0, 0, width * 2, height * 2, 0x000000, 0.72);
+        dimmer.setInteractive();
+
+        const modalBg = this.add.rectangle(0, 0, modalW, modalH, 0x140F14, 0.98);
+        modalBg.setStrokeStyle(2, strokeColor, 0.95);
+
+        // Header Title Bar
+        const headerBg = this.add.rectangle(0, -modalH / 2 + 20, modalW - 20, 24, headerBgColor, 0.95);
+        headerBg.setStrokeStyle(1.2, strokeColor, 0.8);
+
+        const headerTitle = !isVerified
+            ? '📄 HELD DOCUMENT [UNVERIFIED]'
+            : (isAuth ? `✅ VERIFIED CLUE [${fragment.type || fragment.fragmentType || 'CLUE'}]` : '❌ IRRELEVANT DOCUMENT');
+
+        const headerText = this.add.text(0, -modalH / 2 + 20, headerTitle, {
+            fontFamily: 'DogicaBold, Dogica, monospace',
+            fontSize: '7.5px',
+            color: headerTextColor,
+            letterSpacing: 0.5
+        }).setOrigin(0.5);
+
+        // Close X Button on top right
+        const closeX = this.add.text(modalW / 2 - 20, -modalH / 2 + 20, '✕', {
+            fontFamily: 'DogicaBold, monospace',
+            fontSize: '11px',
+            color: '#CBD5E1'
+        }).setOrigin(0.5).setInteractive({ useHandCursor: true });
+
+        const closeModal = () => {
+            if (container && container.active) {
+                this.tweens.add({
+                    targets: container,
+                    alpha: 0,
+                    scaleX: 0.95,
+                    scaleY: 0.95,
+                    duration: 150,
+                    onComplete: () => {
+                        if (container && container.active) container.destroy();
+                        if (this.activeModal === container) this.activeModal = null;
+                    }
+                });
+            }
+        };
+
+        closeX.on('pointerdown', closeModal);
+        closeX.on('pointerover', () => closeX.setColor('#FFFFFF'));
+        closeX.on('pointerout', () => closeX.setColor('#CBD5E1'));
+
+        // Document Title
+        const docTitle = (fragment.title || fragment.objectName || 'Mysterious Document').toUpperCase();
+        const titleText = this.add.text(0, -64, docTitle, {
+            fontFamily: 'DogicaBold, Dogica, monospace',
+            fontSize: '9.5px',
+            color: !isVerified ? '#F59E0B' : (isAuth ? '#34D399' : '#F87171'),
+            align: 'center',
+            letterSpacing: 0.5,
+            wordWrap: { width: modalW - 40 }
+        }).setOrigin(0.5);
+
+        // Status Badge
+        const statusBadgeStr = !isVerified
+            ? '🔍 STATUS: UNVERIFIED (AUTHENTICITY UNCONFIRMED)'
+            : (isAuth ? `✓ STATUS: AUTHENTIC ${fragment.type || fragment.fragmentType || 'CLUE'} EVIDENCE` : '✗ STATUS: IRRELEVANT DECOY');
+
+        const statusBadge = this.add.text(0, -40, statusBadgeStr, {
+            fontFamily: 'Dogica, monospace',
+            fontSize: '6.5px',
+            color: headerTextColor,
+            align: 'center'
+        }).setOrigin(0.5);
+
+        // Narrative Description
+        let descStr = fragment.description || 'A mysterious piece of documentation found in Dusk Village.';
+        if (fragment.clueText && !descStr.includes(fragment.clueText)) {
+            descStr += `\n\n📌 "${fragment.clueText}"`;
+        }
+
+        const descText = this.add.text(0, 4, descStr, {
+            fontFamily: 'Dogica, monospace',
+            fontSize: '7.5px',
+            color: '#E2E8F0',
+            align: 'center',
+            lineSpacing: 4,
+            wordWrap: { width: modalW - 40 }
+        }).setOrigin(0.5);
+
+        // Action Guide Hint
+        const actionHintStr = !isVerified
+            ? '🏛️ Take this document to the Library podium [E] to verify authenticity!'
+            : (isAuth ? '🏛️ Deliver this authentic clue to the Village Hall Archive desk [E]!' : 'Discard or drop this document to make room.');
+
+        const actionHintText = this.add.text(0, 52, actionHintStr, {
+            fontFamily: 'DogicaBold, monospace',
+            fontSize: '7px',
+            color: isAuth ? '#10B981' : '#F59E0B',
+            align: 'center',
+            wordWrap: { width: modalW - 40 }
+        }).setOrigin(0.5);
+
+        // Bottom Drop Button & Keep Button
+        const dropBtnBg = this.add.rectangle(-75, modalH / 2 - 24, 160, 26, 0x7F1D1D, 0.95);
+        dropBtnBg.setStrokeStyle(1.2, 0xDC2626, 0.85);
+        dropBtnBg.setInteractive({ useHandCursor: true });
+
+        const dropBtnText = this.add.text(-75, modalH / 2 - 24, '🗑️ DROP ON GROUND', {
+            fontFamily: 'DogicaBold, monospace',
+            fontSize: '7px',
+            color: '#FFFFFF'
+        }).setOrigin(0.5);
+
+        dropBtnBg.on('pointerover', () => dropBtnBg.setFillStyle(0x991B1B));
+        dropBtnBg.on('pointerout', () => dropBtnBg.setFillStyle(0x7F1D1D));
+        dropBtnBg.on('pointerdown', () => {
+            const interior = this.scene.get('InteriorScene');
+            const gameScene = this.scene.get('GameScene');
+            let posX = 768;
+            let posY = 580;
+            let loc = 'EXTERIOR';
+
+            if (interior && interior.scene.isActive() && interior.playerSprite) {
+                posX = Math.round(interior.playerSprite.x / 16) * 16;
+                posY = Math.round(interior.playerSprite.y / 16) * 16;
+                loc = interior.buildingType ? interior.buildingType.toUpperCase() : 'EXTERIOR';
+            } else if (gameScene && gameScene.localPlayer && gameScene.localPlayer.sprite) {
+                posX = Math.round(gameScene.localPlayer.sprite.x / 16) * 16;
+                posY = Math.round(gameScene.localPlayer.sprite.y / 16) * 16;
+            }
+
+            gameEvents.emit('fragment:attemptDrop', {
+                position: { x: posX, y: posY },
+                location: loc
+            });
+            closeModal();
+        });
+
+        const okBtnBg = this.add.rectangle(85, modalH / 2 - 24, 120, 26, 0x1E293B, 0.95);
+        okBtnBg.setStrokeStyle(1.2, 0x64748B, 0.85);
+        okBtnBg.setInteractive({ useHandCursor: true });
+
+        const okBtnText = this.add.text(85, modalH / 2 - 24, 'KEEP HELD', {
+            fontFamily: 'DogicaBold, monospace',
+            fontSize: '7.5px',
+            color: '#F8FAFC'
+        }).setOrigin(0.5);
+
+        okBtnBg.on('pointerover', () => okBtnBg.setFillStyle(0x334155));
+        okBtnBg.on('pointerout', () => okBtnBg.setFillStyle(0x1E293B));
+        okBtnBg.on('pointerdown', closeModal);
+
+        container.add([
+            dimmer,
+            modalBg,
+            headerBg,
+            headerText,
+            closeX,
+            titleText,
+            statusBadge,
+            descText,
+            actionHintText,
+            dropBtnBg,
+            dropBtnText,
+            okBtnBg,
+            okBtnText
+        ]);
+
+        container.setAlpha(0);
+        container.setScale(0.92);
+        this.tweens.add({
+            targets: container,
+            alpha: 1,
+            scaleX: 1,
+            scaleY: 1,
+            duration: 150,
+            ease: 'Back.out'
+        });
+    }
+
     showFragmentAcquiredModal(fragment) {
         if (this.activeModal) this.activeModal.destroy();
 

@@ -7,6 +7,7 @@ export class ChatBox {
         const height = scene.cameras.main.height;
         this.filter = 'ALL';
         this.isCollapsed = false;
+        this.isExpanded = false;
 
         this.boxW = 420;
         this.boxH = 154;
@@ -20,46 +21,54 @@ export class ChatBox {
         this.bg.setStrokeStyle(1.5, 0x785338, 0.85);
 
         // Header Bar
-        this.header = scene.add.rectangle(0, 0, this.boxW, 24, 0x231E1B, 0.95).setOrigin(0, 0).setInteractive({ useHandCursor: true });
+        this.header = scene.add.rectangle(0, 0, this.boxW, 24, 0x231E1B, 0.95).setOrigin(0, 0);
         this.headerBorder = scene.add.rectangle(0, 24, this.boxW, 1, 0x785338, 0.6).setOrigin(0, 0);
         
-        this.headerText = scene.add.text(10, 12, '💬 TOWN DISCUSSION', {
+        this.headerText = scene.add.text(10, 12, '💬 DISPATCH', {
             fontFamily: 'DogicaBold, Dogica, monospace',
             fontSize: '7.5px',
             color: '#F59E0B',
-            letterSpacing: 1
+            letterSpacing: 0.5
         }).setOrigin(0, 0.5);
 
         // Filter Tabs
-        this.tabAll = scene.add.text(175, 12, 'ALL', {
+        this.tabAll = scene.add.text(170, 12, 'ALL', {
             fontFamily: 'Dogica, monospace',
             fontSize: '7px',
             color: '#F59E0B'
         }).setOrigin(0.5).setInteractive({ useHandCursor: true });
 
-        this.tabSys = scene.add.text(215, 12, 'SYS', {
+        this.tabSys = scene.add.text(210, 12, 'SYS', {
             fontFamily: 'Dogica, monospace',
             fontSize: '7px',
             color: '#A89F91'
         }).setOrigin(0.5).setInteractive({ useHandCursor: true });
 
-        this.tabChat = scene.add.text(260, 12, 'TOWN', {
+        this.tabChat = scene.add.text(255, 12, 'TOWN', {
             fontFamily: 'Dogica, monospace',
             fontSize: '7px',
             color: '#A89F91'
         }).setOrigin(0.5).setInteractive({ useHandCursor: true });
 
-        this.liveTag = scene.add.text(this.boxW - 32, 12, '[LIVE]', {
+        this.liveTag = scene.add.text(320, 12, '[LIVE]', {
             fontFamily: 'Dogica, monospace',
-            fontSize: '7px',
+            fontSize: '6.5px',
             color: '#4ADE80'
-        }).setOrigin(1, 0.5);
+        }).setOrigin(0.5, 0.5);
 
-        this.toggleBtn = scene.add.text(this.boxW - 10, 12, '[-]', {
+        // Expand Button [⤢]
+        this.expandBtn = scene.add.text(370, 12, '[⤢]', {
+            fontFamily: 'DogicaBold, monospace',
+            fontSize: '8px',
+            color: '#F59E0B'
+        }).setOrigin(0.5).setInteractive({ useHandCursor: true });
+
+        // Collapse Button [-]
+        this.toggleBtn = scene.add.text(404, 12, '[-]', {
             fontFamily: 'Dogica, monospace',
             fontSize: '8px',
             color: '#A89F91'
-        }).setOrigin(1, 0.5);
+        }).setOrigin(0.5).setInteractive({ useHandCursor: true });
 
         this.messages = [];
         this.messagesContainer = scene.add.container(10, 30);
@@ -73,6 +82,7 @@ export class ChatBox {
             this.tabSys,
             this.tabChat,
             this.liveTag,
+            this.expandBtn,
             this.toggleBtn,
             this.messagesContainer
         ]);
@@ -80,11 +90,15 @@ export class ChatBox {
         this.tabAll.on('pointerdown', () => this.setFilter('ALL'));
         this.tabSys.on('pointerdown', () => this.setFilter('SYSTEM'));
         this.tabChat.on('pointerdown', () => this.setFilter('CHAT'));
-        this.header.on('pointerdown', () => this.toggleCollapse());
+        this.expandBtn.on('pointerdown', () => this.toggleExpand());
+        this.toggleBtn.on('pointerdown', () => this.toggleCollapse());
 
         this.setupInteractiveInput();
 
-        this.addMessage('SYSTEM', 'Town discussion active. Press Enter or use input below to chat.', '#E5B869');
+        // 2. Full Expanded Chat Modal (Hidden by default)
+        this.setupExpandedModal();
+
+        this.addMessage('SYSTEM', 'Town discussion active. Press Enter or type below.', '#E5B869');
         this.setupEventListeners();
     }
 
@@ -101,7 +115,6 @@ export class ChatBox {
         this.inputDom = this.scene.add.dom(210, this.boxH - 16).createFromHTML(inputHtml);
         this.container.add(this.inputDom);
 
-        // Bind DOM events
         const inputElem = document.getElementById('dusk-chat-input');
         const sendBtn = document.getElementById('dusk-chat-send');
 
@@ -119,9 +132,9 @@ export class ChatBox {
             });
 
             inputElem.addEventListener('keydown', (e) => {
-                e.stopPropagation(); // Prevents WASD / E from moving character while typing
+                e.stopPropagation();
                 if (e.key === 'Enter') {
-                    this.sendCurrentMessage();
+                    this.sendCurrentMessage('dusk-chat-input');
                 }
             });
         }
@@ -129,13 +142,119 @@ export class ChatBox {
         if (sendBtn) {
             sendBtn.addEventListener('click', (e) => {
                 e.preventDefault();
-                this.sendCurrentMessage();
+                this.sendCurrentMessage('dusk-chat-input');
             });
         }
     }
 
-    sendCurrentMessage() {
-        const inputElem = document.getElementById('dusk-chat-input');
+    setupExpandedModal() {
+        const { width, height } = this.scene.cameras.main;
+        const centerX = width / 2;
+        const centerY = height / 2;
+
+        this.expModalW = 600;
+        this.expModalH = 390;
+
+        this.expandedContainer = this.scene.add.container(centerX, centerY).setDepth(2800).setScrollFactor(0);
+        this.expandedContainer.setVisible(false);
+
+        // Dimmer
+        this.expDim = this.scene.add.rectangle(0, 0, width * 2, height * 2, 0x000000, 0.72);
+        this.expDim.setInteractive();
+
+        // Main Box
+        this.expBox = this.scene.add.rectangle(0, 0, this.expModalW, this.expModalH, 0x140F14, 0.98);
+        this.expBox.setStrokeStyle(2, 0xF59E0B, 0.95);
+
+        // Header
+        const headerBg = this.scene.add.rectangle(0, -this.expModalH / 2 + 22, this.expModalW - 20, 28, 0x231E1B, 0.95);
+        headerBg.setStrokeStyle(1.2, 0x785338, 0.8);
+
+        const headerTitle = this.scene.add.text(-this.expModalW / 2 + 24, -this.expModalH / 2 + 22, '💬 VILLAGE DISPATCH & DISCUSSION LOG', {
+            fontFamily: 'DogicaBold, Dogica, monospace',
+            fontSize: '8.5px',
+            color: '#F59E0B',
+            letterSpacing: 0.5
+        }).setOrigin(0, 0.5);
+
+        // Close / Collapse Button
+        const closeBtn = this.scene.add.text(this.expModalW / 2 - 24, -this.expModalH / 2 + 22, '✕', {
+            fontFamily: 'DogicaBold, monospace',
+            fontSize: '11px',
+            color: '#CBD5E1'
+        }).setOrigin(0.5).setInteractive({ useHandCursor: true });
+
+        closeBtn.on('pointerdown', () => this.toggleExpand());
+
+        // Expanded messages container
+        this.expMessagesContainer = this.scene.add.container(-this.expModalW / 2 + 20, -this.expModalH / 2 + 50);
+
+        // Expanded input bar
+        const expInputHtml = `
+        <div style="display:flex; width: 560px; height: 26px; align-items: center; gap: 6px; box-sizing: border-box;">
+            <input type="text" id="dusk-exp-chat-input" placeholder="Type in Town Chat... (Press Enter to send)" maxlength="140"
+                style="flex: 1; height: 24px; background: #201717; border: 1px solid #785338; color: #FDFBF7; font-family: monospace, sans-serif; font-size: 11px; padding: 0 10px; outline: none; border-radius: 2px;" />
+            <button id="dusk-exp-chat-send"
+                style="height: 24px; padding: 0 16px; background: #92400E; border: 1px solid #D97706; color: #FFF8EE; font-family: monospace, sans-serif; font-size: 10px; font-weight: bold; cursor: pointer; border-radius: 2px;">SEND</button>
+        </div>
+        `;
+
+        this.expInputDom = this.scene.add.dom(0, this.expModalH / 2 - 24).createFromHTML(expInputHtml);
+
+        this.expandedContainer.add([
+            this.expDim,
+            this.expBox,
+            headerBg,
+            headerTitle,
+            closeBtn,
+            this.expMessagesContainer,
+            this.expInputDom
+        ]);
+
+        const expInputElem = document.getElementById('dusk-exp-chat-input');
+        const expSendBtn = document.getElementById('dusk-exp-chat-send');
+
+        if (expInputElem) {
+            expInputElem.addEventListener('focus', () => {
+                if (this.scene.input && this.scene.input.keyboard) {
+                    this.scene.input.keyboard.disableGlobalCapture();
+                }
+            });
+
+            expInputElem.addEventListener('blur', () => {
+                if (this.scene.input && this.scene.input.keyboard) {
+                    this.scene.input.keyboard.enableGlobalCapture();
+                }
+            });
+
+            expInputElem.addEventListener('keydown', (e) => {
+                e.stopPropagation();
+                if (e.key === 'Enter') {
+                    this.sendCurrentMessage('dusk-exp-chat-input');
+                }
+            });
+        }
+
+        if (expSendBtn) {
+            expSendBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                this.sendCurrentMessage('dusk-exp-chat-input');
+            });
+        }
+    }
+
+    toggleExpand() {
+        this.isExpanded = !this.isExpanded;
+        this.expandedContainer.setVisible(this.isExpanded);
+        if (this.isExpanded) {
+            this.renderExpandedMessages();
+            const inputElem = document.getElementById('dusk-exp-chat-input');
+            if (inputElem) setTimeout(() => inputElem.focus(), 100);
+        }
+    }
+
+    sendCurrentMessage(inputId) {
+        const inputElem = document.getElementById(inputId);
         if (!inputElem) return;
 
         const text = (inputElem.value || '').trim();
@@ -154,6 +273,7 @@ export class ChatBox {
         this.tabSys.setColor(filterName === 'SYSTEM' ? '#F59E0B' : '#A89F91');
         this.tabChat.setColor(filterName === 'CHAT' ? '#F59E0B' : '#A89F91');
         this.renderMessages();
+        if (this.isExpanded) this.renderExpandedMessages();
     }
 
     toggleCollapse() {
@@ -166,6 +286,9 @@ export class ChatBox {
 
     onResize(width, height) {
         this.container.setPosition(16, height - this.boxH - 16);
+        if (this.expandedContainer) {
+            this.expandedContainer.setPosition(width / 2, height / 2);
+        }
     }
 
     addMessage(category, text, accentColor = '#FDFBF7') {
@@ -176,9 +299,10 @@ export class ChatBox {
         };
 
         this.messages.push(entry);
-        if (this.messages.length > 10) this.messages.shift();
+        if (this.messages.length > 40) this.messages.shift();
 
         this.renderMessages();
+        if (this.isExpanded) this.renderExpandedMessages();
     }
 
     renderMessages() {
@@ -223,6 +347,46 @@ export class ChatBox {
         });
     }
 
+    renderExpandedMessages() {
+        if (!this.expMessagesContainer) return;
+        this.expMessagesContainer.removeAll(true);
+
+        const filtered = this.messages.filter(msg => {
+            if (this.filter === 'ALL') return true;
+            if (this.filter === 'SYSTEM') return msg.category === 'SYSTEM' || msg.category === 'ALERT';
+            if (this.filter === 'CHAT') return msg.category !== 'SYSTEM' && msg.category !== 'ALERT';
+            return true;
+        }).slice(-11);
+
+        filtered.forEach((msg, idx) => {
+            const y = idx * 24;
+            const isAlert = msg.category === 'ALERT';
+            const isSystem = msg.category === 'SYSTEM';
+
+            let badgeColor = isAlert ? '#F87171' : isSystem ? '#F59E0B' : '#E5B869';
+            let badgeBgColor = isAlert ? 0x7F1D1D : isSystem ? 0x451A03 : 0x29221D;
+            let badgeStroke = isAlert ? 0xDC2626 : isSystem ? 0xD97706 : 0x785338;
+
+            const badgeBg = this.scene.add.rectangle(0, y + 9, 64, 16, badgeBgColor, 0.9).setOrigin(0, 0.5);
+            badgeBg.setStrokeStyle(1, badgeStroke, 0.85);
+
+            const badgeText = this.scene.add.text(32, y + 9, msg.category.substring(0, 8), {
+                fontFamily: 'DogicaBold, Dogica, monospace',
+                fontSize: '6.5px',
+                color: badgeColor
+            }).setOrigin(0.5, 0.5);
+
+            const bodyText = this.scene.add.text(74, y + 9, msg.text, {
+                fontFamily: 'Dogica, monospace',
+                fontSize: '7.5px',
+                color: msg.accentColor || '#FDFBF7',
+                wordWrap: { width: this.expModalW - 120 }
+            }).setOrigin(0, 0.5);
+
+            this.expMessagesContainer.add([badgeBg, badgeText, bodyText]);
+        });
+    }
+
     setupEventListeners() {
         gameEvents.on('ui:chatMessageReceived', (msg) => {
             const cat = msg.mode ? msg.mode.toUpperCase() : 'CHAT';
@@ -240,6 +404,7 @@ export class ChatBox {
         if (this.scene.input && this.scene.input.keyboard) {
             this.scene.input.keyboard.enableGlobalCapture();
         }
+        if (this.expandedContainer) this.expandedContainer.destroy();
         this.container.destroy();
     }
 }
