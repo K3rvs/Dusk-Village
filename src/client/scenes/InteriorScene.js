@@ -77,13 +77,15 @@ export default class InteriorScene extends Phaser.Scene {
         const cols = (layoutData && layoutData.width) ? layoutData.width : 23;
         const rows = (layoutData && layoutData.height) ? layoutData.height : 15;
         const roomW = cols * 16;
-        const roomH = rows * 16;
-        // Immersive interior zoom (3.0x for detailed, crisp pixel art)
+        // Dynamic centered room positioning based on zoom
         const interiorZoom = CONFIG.DEFAULT_RENDER_SCALE || 3.0;
-        const centerX = roomW / 2;
-        const centerY = roomH / 2;
-        const roomX = 0;
-        const roomY = 0;
+        const camW = this.scale.width / interiorZoom;
+        const camH = this.scale.height / interiorZoom;
+
+        const roomX = (camW > roomW) ? (camW - roomW) / 2 : 0;
+        const roomY = (camH > roomH) ? (camH - roomH) / 2 : 0;
+        const centerX = roomX + roomW / 2;
+        const centerY = roomY + roomH / 2;
 
         // Floor Color Theme
         let floorColor = 0x4A2E1B; // Warm Timber
@@ -124,10 +126,14 @@ export default class InteriorScene extends Phaser.Scene {
         this.playerSprite.setCollideWorldBounds(true);
         this.playerSprite.setDepth(500);
 
-        // Camera setup: 3.0x zoom with smooth player follow bounded to room
+        // Camera setup: 3.0x zoom, centered on room or smoothly following player
         this.cameras.main.setZoom(interiorZoom);
-        this.cameras.main.setBounds(-48, -48, roomW + 96, roomH + 96);
-        this.cameras.main.startFollow(this.playerSprite, true, 0.1, 0.1);
+        if (roomW > camW || roomH > camH) {
+            this.cameras.main.setBounds(0, 0, Math.max(camW, roomW), Math.max(camH, roomH));
+            this.cameras.main.startFollow(this.playerSprite, true, 0.1, 0.1);
+        } else {
+            this.cameras.main.centerOn(centerX, centerY);
+        }
 
         // Input controls
         this.cursors = this.input.keyboard.createCursorKeys();
@@ -380,35 +386,34 @@ export default class InteriorScene extends Phaser.Scene {
     startVerification() {
         this.isVerifying = true;
         
-        const screenCenterX = this.cameras.main.width / 2;
-        const screenCenterY = this.cameras.main.height / 2;
+        // Compact, unobtrusive progress pill centered in the upper viewport
+        const cam = this.cameras.main;
+        const screenCenterX = cam.midPoint ? cam.midPoint.x : this.playerSprite.x;
+        const screenY = this.playerSprite.y - 48;
 
-        const barWidth = 340;
-        const barHeight = 24;
+        const barWidth = 140;
+        const barHeight = 10;
 
-        const overlay = this.add.rectangle(screenCenterX, screenCenterY, 4000, 4000, 0x000000, 0.45)
-            .setScrollFactor(0).setDepth(2000);
+        const container = this.add.container(screenCenterX, screenY).setDepth(2001);
 
-        const container = this.add.container(screenCenterX, screenCenterY - 60).setScrollFactor(0).setDepth(2001);
+        const modalBg = this.add.rectangle(0, 0, barWidth + 24, 38, 0x140F14, 0.96);
+        modalBg.setStrokeStyle(1.5, 0xF59E0B, 0.95);
 
-        const modalBg = this.add.rectangle(0, 0, barWidth + 48, 86, 0x140F14, 0.98);
-        modalBg.setStrokeStyle(2, 0xF59E0B, 0.95);
-
-        const label = this.add.text(0, -22, '🔍 VERIFYING DOCUMENT METADATA...', {
+        const label = this.add.text(0, -9, '🔍 VERIFYING CLUE...', {
             fontFamily: 'DogicaBold, Dogica, monospace',
-            fontSize: '9.5px',
+            fontSize: '5.5px',
             color: '#F59E0B',
-            letterSpacing: 1
+            letterSpacing: 0.5
         }).setOrigin(0.5);
 
-        const bgBar = this.add.rectangle(-barWidth / 2, 12, barWidth, barHeight, 0x0F172A, 0.95).setOrigin(0, 0.5);
-        bgBar.setStrokeStyle(1.5, 0x334155, 0.9);
+        const bgBar = this.add.rectangle(-barWidth / 2, 7, barWidth, barHeight, 0x0F172A, 0.95).setOrigin(0, 0.5);
+        bgBar.setStrokeStyle(1, 0x334155, 0.9);
 
-        const fillBar = this.add.rectangle(-barWidth / 2 + 2, 12, 0, barHeight - 4, 0x10B981).setOrigin(0, 0.5);
+        const fillBar = this.add.rectangle(-barWidth / 2 + 1, 7, 0, barHeight - 2, 0x10B981).setOrigin(0, 0.5);
         
-        const percentText = this.add.text(0, 12, '0%', {
+        const percentText = this.add.text(0, 7, '0%', {
             fontFamily: 'Dogica, monospace',
-            fontSize: '9px',
+            fontSize: '5px',
             color: '#FFFFFF'
         }).setOrigin(0.5);
 
@@ -420,12 +425,11 @@ export default class InteriorScene extends Phaser.Scene {
             repeat: 39,
             callback: () => {
                 progress += 0.025;
-                fillBar.width = (barWidth - 4) * Math.min(1, progress);
+                fillBar.width = (barWidth - 2) * Math.min(1, progress);
                 percentText.setText(`${Math.round(Math.min(100, progress * 100))}%`);
 
                 if (progress >= 1.0) {
                     this.isVerifying = false;
-                    overlay.destroy();
                     container.destroy();
 
                     if (window.socketClient) {
